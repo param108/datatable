@@ -2,7 +2,11 @@ package main
 
 import (
 	"github.com/jroimartin/gocui"
+	"github.com/param108/datatable/widgets"
 	"log"
+	mylog "github.com/param108/datatable/log"
+	"github.com/sirupsen/logrus"
+
 )
 
 var (
@@ -11,8 +15,8 @@ var (
 
 func setup(g *gocui.Gui) {
 	CreateUI(g)
-	TheUI.AddWidget(NewTopWindow(g, "Top"))
-	TheUI.AddWidget(NewBottomWindow(g, "Bottom"))
+	TheUI.AddWidget(widgets.NewTopWindow(g, "Top"))
+	TheUI.AddWidget(widgets.NewBottomWindow(g, "Bottom"))
 }
 
 func main() {
@@ -21,11 +25,14 @@ func main() {
 		log.Panicln(err)
 	}
 
+	defer mylog.Close()
+
 	defer g.Close()
 
-	CreateUI(g)
+	logrus.Infof("Created gui %p", g)
 
-	TheUI
+	setup(g)
+
 	g.SetManagerFunc(layout)
 
 	if err := g.SetKeybinding("", gocui.KeyCtrlC, gocui.ModNone, quit); err != nil {
@@ -38,64 +45,31 @@ func main() {
 }
 
 type UI struct {
-	W map[string]Widget
+	W map[string]widgets.Widget
 	G *gocui.Gui
 }
 
 func CreateUI(g *gocui.Gui) *UI {
 	TheUI = &UI{
-		W: map[string]Widget{},
+		W: map[string]widgets.Widget{},
 		G: g,
 	}
+	return TheUI
 }
 
-func (ui *UI) AddWidget(w Widget) {
+func (ui *UI) AddWidget(w widgets.Widget) {
 	ui.W[w.GetName()]= w
 }
 
-type Window struct {
-	Name string
-	MinX int
-	MaxX int
-	MinY int
-	MaxY int
-	View *gocui.View
-	G *gocui.Gui
-}
-
-type Widget interface {
-	Animate(g *gocui.Gui)
-	SetView(v *gocui.View)
-	GetName() string
-}
-
-type TopWindow struct {
-	*Window
-}
-
-type BottomWindow struct {
-	*Window
-}
-
-func NewTopWindow(g *gocui.Gui, name string) (*TopWindow, error) {
-	maxX, maxY := g.Size()
-	w := &TopWindow {&Window{name, 0, maxX-1, 0, maxY/10, nil, g}}
-	return w
-}
-
-func NewBottomWindow(g *gocui.Gui, name string) (*BottomWindow, error) {
-	maxX, maxY := g.Size()
-	w := &BottomWindow {&Window{name, 0, maxX-1, maxY/10 + 1, maxY - 1, nil, g}}
-	return w
-}
-
-func (w *TopWindow) Animate(g *gocui.Gui) {
-}
-
-func (w *BottomWindow) Animate(g *gocui.Gui) {
-}
-
 func layout(g *gocui.Gui) error {
+	for _, w := range (TheUI.W) {
+		logrus.Infof("Layout for view %s %p", w.GetName(), g)
+		w.Layout()
+		if err := w.SetView(); err != nil {
+			logrus.Errorf("Failed to setview %+v", err)
+			return err
+		}
+	}
 	return nil
 }
 
