@@ -24,7 +24,7 @@ func (w *TopWindow) Layout() {
 	w.MinX = 0
 	w.MinY = 0
 	w.MaxX = maxX - 1
-	w.MaxY = maxY / 90
+	w.MaxY = (maxY * 9) / 10
 	log.WithFields(log.Fields{
 		"MinX": w.MinX,
 		"MinY": w.MinY,
