@@ -10,7 +10,7 @@ type TopWindow struct {
 }
 
 func NewTopWindow(g *gocui.Gui, name string) *TopWindow {
-	w := &TopWindow {&Window{Name: name, G: g}}
+	w := &TopWindow{&Window{Name: name, G: g}}
 	w.Layout()
 	return w
 }
@@ -24,7 +24,7 @@ func (w *TopWindow) Layout() {
 	w.MinX = 0
 	w.MinY = 0
 	w.MaxX = maxX - 1
-	w.MaxY = maxY/10
+	w.MaxY = maxY / 90
 	log.WithFields(log.Fields{
 		"MinX": w.MinX,
 		"MinY": w.MinY,

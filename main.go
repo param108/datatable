@@ -2,11 +2,10 @@ package main
 
 import (
 	"github.com/jroimartin/gocui"
-	"github.com/param108/datatable/widgets"
-	"log"
 	mylog "github.com/param108/datatable/log"
+	"github.com/param108/datatable/widgets"
 	"github.com/sirupsen/logrus"
-
+	"log"
 )
 
 var (
@@ -42,6 +41,7 @@ func main() {
 	if err := g.MainLoop(); err != nil && err != gocui.ErrQuit {
 		log.Panicln(err)
 	}
+
 }
 
 type UI struct {
@@ -58,11 +58,11 @@ func CreateUI(g *gocui.Gui) *UI {
 }
 
 func (ui *UI) AddWidget(w widgets.Widget) {
-	ui.W[w.GetName()]= w
+	ui.W[w.GetName()] = w
 }
 
 func layout(g *gocui.Gui) error {
-	for _, w := range (TheUI.W) {
+	for _, w := range TheUI.W {
 		logrus.Infof("Layout for view %s %p", w.GetName(), g)
 		w.Layout()
 		if err := w.SetView(); err != nil {
@@ -76,4 +76,3 @@ func layout(g *gocui.Gui) error {
 func quit(g *gocui.Gui, v *gocui.View) error {
 	return gocui.ErrQuit
 }
-
