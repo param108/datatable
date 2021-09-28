@@ -20,7 +20,7 @@ func init() {
 
 	}
 	log.SetOutput(logfile)
-
+	log.SetLevel(log.InfoLevel)
 	log.Infof("Begun %v", time.Now())
 	log.SetReportCaller(true)
 	log.SetFormatter(&log.JSONFormatter{})

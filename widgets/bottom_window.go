@@ -26,7 +26,7 @@ func (w *BottomWindow) Layout() {
 		"MinY": w.MinY,
 		"MaxX": w.MaxX,
 		"MaxY": w.MaxY,
-	}).Infof("BottomWindow: Layout")
+	}).Debugf("BottomWindow: Layout")
 
 }
 

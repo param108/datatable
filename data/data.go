@@ -29,4 +29,7 @@ type DataSource interface {
 	GetColumns(ctx context.Context) []*ColumnMetadata
 	SetColumns(ctx context.Context, columns []*ColumnMetadata)
 	SetColumn(ctx context.Context, key string, t ColumnType) error
+	GetSize(ctx context.Context) (numRows int, numCols int)
+	GetColumn(ctx context.Context, col int) ([]string, error)
+	GetRow(ctx context.Context, row int) ([]string, error)
 }

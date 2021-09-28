@@ -107,3 +107,39 @@ func (c *CSV) SetColumn(ctx context.Context, key string, t ColumnType) error {
 
 	return errors.New("invalid key")
 }
+
+// GetSize - returns the size of the data table
+func (c *CSV) GetSize(ctx context.Context) (numRows, numCols int) {
+	numRows = len(c.data)
+	if len(c.data) == 0 {
+		return numRows, numCols
+	}
+	numCols = len(c.data[0])
+	return numRows, numCols
+}
+
+//GetColumn - returns the data for a column
+func (c *CSV) GetColumn(ctx context.Context, col int) ([]string, error) {
+	if len(c.data) == 0 {
+		return nil, errors.New("invalid column")
+	}
+	if len(c.data[0]) <= col {
+		return nil, errors.New("invalid column")
+	}
+
+	ret := []string{}
+
+	for _, row := range c.data {
+		ret = append(ret, row[col])
+	}
+	return ret, nil
+}
+
+//GetRow - returns the data for a Row
+func (c *CSV) GetRow(ctx context.Context, row int) ([]string, error) {
+	if len(c.data) == 0 {
+		return nil, errors.New("invalid column")
+	}
+
+	return c.data[row], nil
+}

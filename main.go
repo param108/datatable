@@ -90,7 +90,7 @@ func (ui *UI) AddWidget(w widgets.Widget) {
 
 func layout(g *gocui.Gui) error {
 	for _, w := range TheUI.W {
-		logrus.Infof("Layout for view %s %p", w.GetName(), g)
+		logrus.Debugf("Layout for view %s %p", w.GetName(), g)
 		w.Layout()
 		if err := w.SetView(); err != nil {
 			logrus.Errorf("Failed to setview %+v", err)
