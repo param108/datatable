@@ -1,7 +1,6 @@
 package widgets
 
 import (
-	"context"
 	"sync"
 
 	"strings"
@@ -28,8 +27,7 @@ func NewDataWindow(g *gocui.Gui, name string, d data.DataSource) *DataWindow {
 func (w *DataWindow) Animate(g *gocui.Gui) error {
 	w.mx.Lock()
 	defer w.mx.Unlock()
-	if w.changed {
-		//w.Window.View.MoveCursor(0, 0, false)
+	if w.changed || w.d.Changed() {
 		w.formatData()
 		w.changed = false
 	}
@@ -52,12 +50,11 @@ func (w *DataWindow) Layout() {
 }
 
 func (w *DataWindow) formatData() {
-	ctx := context.Background()
-	rows, cols := w.d.GetSize(ctx)
+	rows, cols := w.d.GetSize()
 
 	colMaxWidth := []int{}
 	for c := 0; c < cols; c++ {
-		colData, _ := w.d.GetColumn(context.Background(), c)
+		colData, _ := w.d.GetColumn(c)
 		max := int(0)
 		for _, d := range colData {
 			if len(d) > max {
@@ -70,7 +67,7 @@ func (w *DataWindow) formatData() {
 	line := ""
 
 	for r := 0; r < rows; r++ {
-		rowData, _ := w.d.GetRow(context.Background(), r)
+		rowData, _ := w.d.GetRow(r)
 		log.Debugln(rowData)
 		for idx, d := range rowData {
 			line += " " + d

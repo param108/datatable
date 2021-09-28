@@ -23,13 +23,13 @@ type ColumnMetadata struct {
 }
 
 type DataSource interface {
-	CreateContext() context.Context
 	Create(ctx context.Context) error
-	Get(ctx context.Context, row, col int) (interface{}, error)
-	GetColumns(ctx context.Context) []*ColumnMetadata
-	SetColumns(ctx context.Context, columns []*ColumnMetadata)
-	SetColumn(ctx context.Context, key string, t ColumnType) error
-	GetSize(ctx context.Context) (numRows int, numCols int)
-	GetColumn(ctx context.Context, col int) ([]string, error)
-	GetRow(ctx context.Context, row int) ([]string, error)
+	Get(row, col int) (interface{}, error)
+	GetColumns() []*ColumnMetadata
+	SetColumns(columns []*ColumnMetadata)
+	SetColumn(key string, t ColumnType) error
+	GetSize() (numRows int, numCols int)
+	GetColumn(col int) ([]string, error)
+	GetRow(row int) ([]string, error)
+	Changed() bool
 }

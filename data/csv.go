@@ -7,6 +7,7 @@ import (
 
 	"github.com/param108/datatable/types"
 	"github.com/pkg/errors"
+	"sync"
 )
 
 type CSV struct {
@@ -14,22 +15,18 @@ type CSV struct {
 	Filename string
 	data     [][]string
 	metadata []*ColumnMetadata
+	mx       sync.Mutex
+	changed  bool
 }
 
 func NewCSV(filename string) (DataSource, error) {
 	c := &CSV{}
-	ctx := c.CreateContext()
+	ctx := context.Background()
 	ctx = context.WithValue(ctx, types.ContextKey("filename"), filename)
 	if err := c.Create(ctx); err != nil {
 		return nil, err
 	}
 	return c, nil
-}
-
-//CreateContext - returns the context to be used
-// for a CSV datasource
-func (c *CSV) CreateContext() context.Context {
-	return context.Background()
 }
 
 //Create - Instantiates the csv data source
@@ -60,7 +57,7 @@ func (c *CSV) Create(ctx context.Context) error {
 }
 
 // Get - row and col are zero indexed
-func (c *CSV) Get(ctx context.Context, row, col int) (interface{}, error) {
+func (c *CSV) Get(row, col int) (interface{}, error) {
 	if len(c.data) <= row {
 		return nil, errors.New("row idx too large")
 	}
@@ -87,17 +84,17 @@ func (c *CSV) createMetadata() {
 }
 
 // GetColumns - get list of columns and their types
-func (c *CSV) GetColumns(ctx context.Context) []*ColumnMetadata {
+func (c *CSV) GetColumns() []*ColumnMetadata {
 	return c.metadata
 }
 
 // SetColumns - set the types of all the columns in one shot
-func (c *CSV) SetColumns(ctx context.Context, columns []*ColumnMetadata) {
+func (c *CSV) SetColumns(columns []*ColumnMetadata) {
 	c.metadata = columns
 }
 
 // SetColumn - set the Column type for one column
-func (c *CSV) SetColumn(ctx context.Context, key string, t ColumnType) error {
+func (c *CSV) SetColumn(key string, t ColumnType) error {
 	for _, m := range c.metadata {
 		if m.Name == key {
 			m.Type = t
@@ -109,7 +106,7 @@ func (c *CSV) SetColumn(ctx context.Context, key string, t ColumnType) error {
 }
 
 // GetSize - returns the size of the data table
-func (c *CSV) GetSize(ctx context.Context) (numRows, numCols int) {
+func (c *CSV) GetSize() (numRows, numCols int) {
 	numRows = len(c.data)
 	if len(c.data) == 0 {
 		return numRows, numCols
@@ -119,7 +116,7 @@ func (c *CSV) GetSize(ctx context.Context) (numRows, numCols int) {
 }
 
 //GetColumn - returns the data for a column
-func (c *CSV) GetColumn(ctx context.Context, col int) ([]string, error) {
+func (c *CSV) GetColumn(col int) ([]string, error) {
 	if len(c.data) == 0 {
 		return nil, errors.New("invalid column")
 	}
@@ -136,10 +133,14 @@ func (c *CSV) GetColumn(ctx context.Context, col int) ([]string, error) {
 }
 
 //GetRow - returns the data for a Row
-func (c *CSV) GetRow(ctx context.Context, row int) ([]string, error) {
+func (c *CSV) GetRow(row int) ([]string, error) {
 	if len(c.data) == 0 {
 		return nil, errors.New("invalid column")
 	}
 
 	return c.data[row], nil
+}
+
+func (c *CSV) Changed() bool {
+	return c.changed
 }
