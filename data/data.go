@@ -29,7 +29,7 @@ type DataSource interface {
 	SetColumns(columns []*ColumnMetadata)
 	SetColumn(key string, t ColumnType) error
 	GetSize() (numRows int, numCols int)
-	GetColumn(col int) ([]string, error)
-	GetRow(row int) ([]string, error)
+	GetColumn(col int) ([]*Metadata, error)
+	GetRow(row int) ([]*Metadata, error)
 	Changed() bool
 }

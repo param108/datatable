@@ -10,11 +10,19 @@ import (
 )
 
 type CSV struct {
-	setup    bool
-	Filename string
-	data     [][]string
-	metadata []*ColumnMetadata
-	changed  bool
+	setup          bool
+	Filename       string
+	data           [][]string
+	Data           [][]*Metadata
+	columnMetadata []*ColumnMetadata
+	changed        bool
+}
+
+type Metadata struct {
+	Value   string
+	FgColor string
+	BgColor string
+	Attr    string
 }
 
 func NewCSV(filename string) (DataSource, error) {
@@ -48,6 +56,24 @@ func (c *CSV) Create(ctx context.Context) error {
 
 	c.data = data
 
+	c.Data = [][]*Metadata{}
+	for rowNum, rowData := range c.data {
+		rowM := []*Metadata{}
+		for _, d := range rowData {
+			m := &Metadata{
+				Value: d,
+			}
+
+			if rowNum == 0 {
+				m.BgColor = "[_light_gray_]"
+				m.FgColor = "[black]"
+				m.Attr = "[underline]"
+			}
+			rowM = append(rowM, m)
+		}
+		c.Data = append(c.Data, rowM)
+	}
+
 	c.createMetadata()
 
 	c.setup = true
@@ -72,28 +98,28 @@ func (c *CSV) Get(row, col int) (interface{}, error) {
 }
 
 func (c *CSV) createMetadata() {
-	c.metadata = []*ColumnMetadata{}
+	c.columnMetadata = []*ColumnMetadata{}
 	for _, header := range c.data[0] {
 		cm := &ColumnMetadata{}
 		cm.Name = header
 		cm.Type = ColumnTypeString
-		c.metadata = append(c.metadata, cm)
+		c.columnMetadata = append(c.columnMetadata, cm)
 	}
 }
 
 // GetColumns - get list of columns and their types
 func (c *CSV) GetColumns() []*ColumnMetadata {
-	return c.metadata
+	return c.columnMetadata
 }
 
 // SetColumns - set the types of all the columns in one shot
 func (c *CSV) SetColumns(columns []*ColumnMetadata) {
-	c.metadata = columns
+	c.columnMetadata = columns
 }
 
 // SetColumn - set the Column type for one column
 func (c *CSV) SetColumn(key string, t ColumnType) error {
-	for _, m := range c.metadata {
+	for _, m := range c.columnMetadata {
 		if m.Name == key {
 			m.Type = t
 			return nil
@@ -114,7 +140,7 @@ func (c *CSV) GetSize() (numRows, numCols int) {
 }
 
 //GetColumn - returns the data for a column
-func (c *CSV) GetColumn(col int) ([]string, error) {
+func (c *CSV) GetColumn(col int) ([]*Metadata, error) {
 	if len(c.data) == 0 {
 		return nil, errors.New("invalid column")
 	}
@@ -122,21 +148,21 @@ func (c *CSV) GetColumn(col int) ([]string, error) {
 		return nil, errors.New("invalid column")
 	}
 
-	ret := []string{}
+	ret := []*Metadata{}
 
-	for _, row := range c.data {
+	for _, row := range c.Data {
 		ret = append(ret, row[col])
 	}
 	return ret, nil
 }
 
 //GetRow - returns the data for a Row
-func (c *CSV) GetRow(row int) ([]string, error) {
+func (c *CSV) GetRow(row int) ([]*Metadata, error) {
 	if len(c.data) == 0 {
 		return nil, errors.New("invalid column")
 	}
 
-	return c.data[row], nil
+	return c.Data[row], nil
 }
 
 func (c *CSV) Changed() bool {

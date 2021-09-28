@@ -5,6 +5,7 @@ import (
 
 	"strings"
 
+	"fmt"
 	"github.com/jroimartin/gocui"
 	"github.com/mitchellh/colorstring"
 	"github.com/param108/datatable/data"
@@ -58,8 +59,8 @@ func (w *DataWindow) formatData() []byte {
 		colData, _ := w.d.GetColumn(c)
 		max := int(0)
 		for _, d := range colData {
-			if len(d) > max {
-				max = len(d)
+			if len(d.Value) > max {
+				max = len(d.Value)
 			}
 		}
 		colMaxWidth = append(colMaxWidth, max+2)
@@ -73,17 +74,17 @@ func (w *DataWindow) formatData() []byte {
 		for idx, d := range rowData {
 			tl := ""
 
-			tl += " " + d
+			tl += " " + d.Value
 			maxWidth := colMaxWidth[idx]
-			if len(d) < maxWidth {
-				tl += strings.Repeat(" ", maxWidth-(len(d)+1))
+			if len(d.Value) < maxWidth {
+				tl += strings.Repeat(" ", maxWidth-(len(d.Value)+1))
 			}
 			if r == 0 {
-				tl = colorstring.Color("[_light_gray_][black]" + tl)
+				tl = colorstring.Color(fmt.Sprintf("%s%s%s", d.BgColor, d.FgColor, d.Attr) + tl)
 			}
 			line += tl
 		}
-		log.Debugln(line)
+		log.Infoln(line)
 		line += "\n"
 	}
 
