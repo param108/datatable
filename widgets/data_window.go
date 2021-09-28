@@ -84,7 +84,7 @@ func (w *DataWindow) formatData() []byte {
 			}
 			line += tl
 		}
-		log.Infoln(line)
+		log.Debugln(line)
 		line += "\n"
 	}
 
