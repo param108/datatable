@@ -7,7 +7,6 @@ import (
 
 	"github.com/param108/datatable/types"
 	"github.com/pkg/errors"
-	"sync"
 )
 
 type CSV struct {
@@ -15,7 +14,6 @@ type CSV struct {
 	Filename string
 	data     [][]string
 	metadata []*ColumnMetadata
-	mx       sync.Mutex
 	changed  bool
 }
 

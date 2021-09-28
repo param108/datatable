@@ -9,6 +9,7 @@ require (
 	github.com/glycerine/liner v0.0.0-20160121172638-72909af234e0 // indirect
 	github.com/glycerine/zygomys v5.1.2+incompatible // indirect
 	github.com/jroimartin/gocui v0.5.0
+	github.com/mitchellh/colorstring v0.0.0-20190213212951-d06e56a500db // indirect
 	github.com/nsf/gocode v0.0.0-20190302080247-5bee97b48836 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/rogpeppe/godef v1.1.2 // indirect

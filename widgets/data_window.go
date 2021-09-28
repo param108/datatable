@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/jroimartin/gocui"
+	"github.com/mitchellh/colorstring"
 	"github.com/param108/datatable/data"
 	log "github.com/sirupsen/logrus"
 )
@@ -28,7 +29,7 @@ func (w *DataWindow) Animate(g *gocui.Gui) error {
 	w.mx.Lock()
 	defer w.mx.Unlock()
 	if w.changed || w.d.Changed() {
-		w.formatData()
+		w.Window.View.Write(w.formatData())
 		w.changed = false
 	}
 	return nil
@@ -49,7 +50,7 @@ func (w *DataWindow) Layout() {
 	}).Debugf("TopWindow: Layout")
 }
 
-func (w *DataWindow) formatData() {
+func (w *DataWindow) formatData() []byte {
 	rows, cols := w.d.GetSize()
 
 	colMaxWidth := []int{}
@@ -70,15 +71,22 @@ func (w *DataWindow) formatData() {
 		rowData, _ := w.d.GetRow(r)
 		log.Debugln(rowData)
 		for idx, d := range rowData {
-			line += " " + d
+			tl := ""
+
+			tl += " " + d
 			maxWidth := colMaxWidth[idx]
 			if len(d) < maxWidth {
-				line += strings.Repeat(" ", maxWidth-(len(d)+1))
+				tl += strings.Repeat(" ", maxWidth-(len(d)+1))
 			}
+			if r == 0 {
+				tl = colorstring.Color("[_light_gray_][black]" + tl)
+			}
+			line += tl
 		}
 		log.Debugln(line)
 		line += "\n"
 	}
-	w.Window.View.Write([]byte(line))
+
+	return []byte(line)
 
 }
