@@ -11,7 +11,7 @@ type Window struct {
 	MinY int
 	MaxY int
 	View *gocui.View
-	G *gocui.Gui
+	G    *gocui.Gui
 }
 
 func (w *Window) SetView() error {
@@ -25,4 +25,7 @@ func (w *Window) SetView() error {
 
 func (w *Window) GetName() string {
 	return w.Name
+}
+
+func (w *Window) Refresh(g *gocui.Gui) {
 }

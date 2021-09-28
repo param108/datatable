@@ -30,5 +30,6 @@ func (w *BottomWindow) Layout() {
 
 }
 
-func (w *BottomWindow) Animate(g *gocui.Gui) {
+func (w *BottomWindow) Animate(g *gocui.Gui) error {
+	return nil
 }

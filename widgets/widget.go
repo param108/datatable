@@ -5,7 +5,7 @@ import (
 )
 
 type Widget interface {
-	Animate(g *gocui.Gui)
+	Animate(g *gocui.Gui) error
 	SetView() error
 	GetName() string
 	Layout()

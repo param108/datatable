@@ -10,6 +10,7 @@ require (
 	github.com/glycerine/zygomys v5.1.2+incompatible // indirect
 	github.com/jroimartin/gocui v0.5.0
 	github.com/nsf/gocode v0.0.0-20190302080247-5bee97b48836 // indirect
+	github.com/pkg/errors v0.9.1 // indirect
 	github.com/rogpeppe/godef v1.1.2 // indirect
 	github.com/shurcooL/go v0.0.0-20200502201357-93f07166e636 // indirect
 	github.com/shurcooL/go-goon v0.0.0-20210110234559-7585751d9a17 // indirect
