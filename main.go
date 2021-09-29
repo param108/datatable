@@ -86,6 +86,7 @@ type UI struct {
 	G  *gocui.Gui
 	D  data.DataSource
 	KS *keybindings.KeyStore
+	CV *gocui.View
 }
 
 func CreateUI(g *gocui.Gui) *UI {
@@ -104,13 +105,24 @@ func (ui *UI) AddWidget(w widgets.Widget) {
 
 func layout(g *gocui.Gui) error {
 	for _, w := range TheUI.W {
-		logrus.Debugf("Layout for view %s %p", w.GetName(), g)
-		w.Layout()
-		if err := w.SetView(); err != nil {
-			logrus.Errorf("Failed to setview %+v", err)
-			return err
+		if w.GetView() == nil {
+			logrus.Debugf("Layout for view %s %p", w.GetName(), g)
+			w.Layout()
+			if err := w.SetView(); err != nil {
+				logrus.Errorf("Failed to setview %+v", err)
+				return err
+			}
 		}
 	}
+
+	if TheUI.CV == nil {
+		v, err := g.SetCurrentView("Data")
+		if err != nil {
+			panic(err)
+		}
+		TheUI.CV = v
+	}
+
 	return nil
 }
 

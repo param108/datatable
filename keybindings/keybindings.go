@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/jroimartin/gocui"
 	"github.com/pkg/errors"
+	log "github.com/sirupsen/logrus"
 )
 
 type KeyBinding struct {
@@ -44,8 +45,8 @@ func (ks *KeyStore) AddKey(viewName string, key gocui.Key, mod gocui.Modifier,
 	if _, ok := ks.M[hash]; ok {
 		return errors.New("already found")
 	}
-
-	if err := ks.g.SetKeybinding("", key, mod, fn); err != nil {
+	log.Infof("New Binding %s", viewName)
+	if err := ks.g.SetKeybinding(viewName, key, mod, fn); err != nil {
 		return errors.Wrap(err, "failed to bind")
 	}
 
