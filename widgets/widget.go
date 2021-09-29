@@ -9,4 +9,5 @@ type Widget interface {
 	SetView() error
 	GetName() string
 	Layout()
+	SetKeys() error
 }

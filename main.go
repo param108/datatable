@@ -6,6 +6,7 @@ import (
 
 	"github.com/jroimartin/gocui"
 	"github.com/param108/datatable/data"
+	"github.com/param108/datatable/keybindings"
 	mylog "github.com/param108/datatable/log"
 	"github.com/param108/datatable/widgets"
 	"github.com/sirupsen/logrus"
@@ -25,7 +26,7 @@ func setup(g *gocui.Gui, filename string) {
 	}
 
 	CreateUI(g)
-	TheUI.AddWidget(widgets.NewDataWindow(g, "Data", TheSource))
+	TheUI.AddWidget(widgets.NewDataWindow(g, "Data", TheSource, TheUI.KS))
 	TheUI.AddWidget(widgets.NewBottomWindow(g, "Bottom"))
 	TheUI.D = TheSource
 
@@ -47,9 +48,19 @@ func main() {
 
 	g.SetManagerFunc(layout)
 
-	if err := g.SetKeybinding("", gocui.KeyCtrlC, gocui.ModNone, quit); err != nil {
-		log.Panicln(err)
+	TheUI.KS.AddKey("", gocui.KeyCtrlC, gocui.ModNone, quit)
+	//TheUI.KS.AddKey("", gocui.KeyArrowDown, gocui.ModNone, quit)
+
+	//if err := g.SetKeybinding("", gocui.KeyCtrlC, gocui.ModNone, quit); err != nil {
+	//	log.Panicln(err)
+	//}
+
+	for _, w := range TheUI.W {
+		w.SetKeys()
 	}
+	//if err := g.SetKeybinding("", gocui.KeyArrowDown, gocui.ModNone, quit); err != nil {
+	//	log.Panicln(err)
+	//}
 
 	var wg sync.WaitGroup
 
@@ -71,16 +82,19 @@ func main() {
 }
 
 type UI struct {
-	W map[string]widgets.Widget
-	G *gocui.Gui
-	D data.DataSource
+	W  map[string]widgets.Widget
+	G  *gocui.Gui
+	D  data.DataSource
+	KS *keybindings.KeyStore
 }
 
 func CreateUI(g *gocui.Gui) *UI {
 	TheUI = &UI{
-		W: map[string]widgets.Widget{},
-		G: g,
+		W:  map[string]widgets.Widget{},
+		G:  g,
+		KS: keybindings.NewKeyStore(g),
 	}
+
 	return TheUI
 }
 
@@ -101,7 +115,7 @@ func layout(g *gocui.Gui) error {
 }
 
 func animate(g *gocui.Gui, quit chan int) {
-	t := time.NewTicker(time.Second)
+	t := time.NewTicker(time.Millisecond * 100)
 	for {
 		select {
 		case <-t.C:
@@ -115,5 +129,6 @@ func animate(g *gocui.Gui, quit chan int) {
 }
 
 func quit(g *gocui.Gui, v *gocui.View) error {
+	logrus.Infof("quit called")
 	return gocui.ErrQuit
 }

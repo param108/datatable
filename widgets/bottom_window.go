@@ -33,3 +33,7 @@ func (w *BottomWindow) Layout() {
 func (w *BottomWindow) Animate(g *gocui.Gui) error {
 	return nil
 }
+
+func (w *BottomWindow) SetKeys() error {
+	return nil
+}
