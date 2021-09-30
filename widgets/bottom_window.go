@@ -1,6 +1,8 @@
 package widgets
 
 import (
+	"strconv"
+
 	"github.com/jroimartin/gocui"
 	"github.com/param108/datatable/messages"
 	log "github.com/sirupsen/logrus"
@@ -8,8 +10,10 @@ import (
 
 type BottomWindow struct {
 	*Window
-	sendEvt chan *messages.Message
-	rdEvt   chan *messages.Message
+	sendEvt   chan *messages.Message
+	rdEvt     chan *messages.Message
+	currDataX int
+	currDataY int
 }
 
 func (w *BottomWindow) EventHandler() {
@@ -20,14 +24,47 @@ func (w *BottomWindow) EventHandler() {
 			w.G.Update(func(g *gocui.Gui) error {
 				w.Window.View.Clear()
 				w.Window.View.Write([]byte(msg.Data["value"]))
+				w.currDataX, _ = strconv.Atoi(msg.Data["X"])
+				w.currDataY, _ = strconv.Atoi(msg.Data["Y"])
 				return nil
 			})
 		}
 	}
 }
 
-func (w *BottomWindow) CustomSetup() {
+func (w *BottomWindow) Edit(v *gocui.View, key gocui.Key, ch rune, mod gocui.Modifier) {
+	log.Infof("BottomWindow Edit: %s %d %d", string(ch), key, mod)
 
+	if key == gocui.KeyBackspace || key == gocui.KeyBackspace2 {
+		log.Infof("backspace")
+		v.EditDelete(true)
+		return
+	}
+
+	if key == gocui.KeyEnter {
+		msg := &messages.Message{
+			Key: messages.UpdateValueMsg,
+			Data: map[string]string{
+				"value": v.Buffer(),
+				"X":     strconv.Itoa(w.currDataX),
+				"Y":     strconv.Itoa(w.currDataY),
+			},
+		}
+		w.sendEvt <- msg
+		return
+	}
+	if ch == 0 {
+		return
+	}
+
+	v.EditWrite(ch)
+}
+
+func (w *BottomWindow) CustomSetup() {
+	w.View.Editor = w
+	w.View.Editable = true
+	w.View.Overwrite = true
+	w.View.SetCursor(0, 0)
 }
 
 func NewBottomWindow(g *gocui.Gui, name string, cltRd, cltWr chan *messages.Message) *BottomWindow {

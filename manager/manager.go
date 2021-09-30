@@ -4,6 +4,7 @@ import (
 	"sync"
 
 	"github.com/param108/datatable/messages"
+	log "github.com/sirupsen/logrus"
 )
 
 type Manager struct {
@@ -29,6 +30,7 @@ func NewManager() *Manager {
 
 func (mgr *Manager) Boss() {
 	for msg := range mgr.in {
+		log.Infof("Boss: %s", msg.Key)
 		mgr.out <- msg
 	}
 }
@@ -59,7 +61,8 @@ func (mgr *Manager) outer(fromMgr chan *messages.Message, toClient chan *message
 			to = toClient
 			currmsg = msgs[0]
 		case to <- currmsg:
-			msgs := msgs[1:]
+			log.Infof("Messages %v", msgs)
+			msgs = msgs[1:]
 			if len(msgs) == 0 {
 				// mark the toClient channels out of bound
 				// write to nil channel blocks forever
@@ -87,7 +90,7 @@ func (mgr *Manager) gofanin(fromClient chan *messages.Message, toMgr chan *messa
 			to = toMgr
 			currmsg = msgs[0]
 		case to <- currmsg:
-			msgs := msgs[1:]
+			msgs = msgs[1:]
 			if len(msgs) == 0 {
 				// mark the toClient channels out of bound
 				// write to nil channel blocks forever

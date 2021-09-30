@@ -48,7 +48,28 @@ func NewDataWindow(g *gocui.Gui, name string, d data.DataSource, ks *keybindings
 	w.ks = ks
 	w.sendEvt = sendEvt
 	w.rdEvt = rdEvt
+
+	go w.EventHandler()
+
 	return w
+}
+
+func (w *DataWindow) EventHandler() {
+	for msg := range w.rdEvt {
+		log.Infof("DataWindow: %s", msg.Key)
+
+		switch msg.Key {
+		case messages.UpdateValueMsg:
+			// Its edit mode now, extract the value and show it
+			w.G.Update(func(g *gocui.Gui) error {
+				value := msg.Data["value"]
+				X, _ := strconv.Atoi(msg.Data["X"])
+				Y, _ := strconv.Atoi(msg.Data["Y"])
+				w.d.Set(Y, X, value)
+				return nil
+			})
+		}
+	}
 }
 
 func (w *DataWindow) Edit(v *gocui.View, key gocui.Key, ch rune, mod gocui.Modifier) {

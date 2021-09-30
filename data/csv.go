@@ -80,6 +80,29 @@ func (c *CSV) Create(ctx context.Context) error {
 	return nil
 }
 
+func (c *CSV) Set(row, col int, value interface{}) error {
+	if len(c.data) <= row {
+		return errors.New("row idx too large")
+	}
+
+	if len(c.data[row]) <= col {
+		return errors.New("col idx too large")
+	}
+
+	// This is the header row
+	if row == 0 {
+		return errors.New("invalid row")
+	}
+
+	if v, ok := value.(string); ok {
+		c.data[row][col] = v
+	} else {
+		return errors.New("invalid value")
+	}
+
+	return nil
+}
+
 // Get - row and col are zero indexed
 func (c *CSV) Get(row, col int) (interface{}, error) {
 	if len(c.data) <= row {
