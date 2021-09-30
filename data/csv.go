@@ -3,7 +3,9 @@ package data
 import (
 	"context"
 	"encoding/csv"
+	"io/ioutil"
 	"os"
+	"strings"
 	"sync"
 
 	"github.com/param108/datatable/types"
@@ -28,13 +30,21 @@ type Metadata struct {
 }
 
 func NewCSV(filename string) (DataSource, error) {
-	c := &CSV{}
+	c := &CSV{Filename: filename}
 	ctx := context.Background()
 	ctx = context.WithValue(ctx, types.ContextKey("filename"), filename)
 	if err := c.Create(ctx); err != nil {
 		return nil, err
 	}
 	return c, nil
+}
+
+func (c *CSV) Save() error {
+	data := ""
+	for _, row := range c.data {
+		data += strings.Join(row, ",") + "\n"
+	}
+	return ioutil.WriteFile(c.Filename, []byte(data), 0666)
 }
 
 //Create - Instantiates the csv data source

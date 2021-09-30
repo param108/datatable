@@ -96,6 +96,11 @@ func (w *DataWindow) Edit(v *gocui.View, key gocui.Key, ch rune, mod gocui.Modif
 			},
 		}
 		w.sendEvt <- msg
+	case 's':
+		err := w.d.Save()
+		if err != nil {
+			log.Errorf("failed to save %v", err)
+		}
 	}
 	return
 }

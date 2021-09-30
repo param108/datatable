@@ -34,4 +34,5 @@ type DataSource interface {
 	Changed() bool
 	ClearChanged()
 	Set(row, col int, value interface{}) error
+	Save() error
 }
