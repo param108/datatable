@@ -3,6 +3,8 @@ package widgets
 import (
 	"strconv"
 
+	"strings"
+
 	"github.com/jroimartin/gocui"
 	"github.com/param108/datatable/messages"
 	log "github.com/sirupsen/logrus"
@@ -23,6 +25,7 @@ func (w *BottomWindow) EventHandler() {
 			// Its edit mode now, extract the value and show it
 			w.G.Update(func(g *gocui.Gui) error {
 				w.Window.View.Clear()
+				w.Window.View.SetCursor(0, 0)
 				w.Window.View.Write([]byte(msg.Data["value"]))
 				w.currDataX, _ = strconv.Atoi(msg.Data["X"])
 				w.currDataY, _ = strconv.Atoi(msg.Data["Y"])
@@ -42,15 +45,18 @@ func (w *BottomWindow) Edit(v *gocui.View, key gocui.Key, ch rune, mod gocui.Mod
 	}
 
 	if key == gocui.KeyEnter {
+		log.Infof("keyEnter %s", strings.TrimSpace(v.Buffer()))
 		msg := &messages.Message{
 			Key: messages.UpdateValueMsg,
 			Data: map[string]string{
-				"value": v.Buffer(),
+				"value": strings.TrimSpace(v.Buffer()),
 				"X":     strconv.Itoa(w.currDataX),
 				"Y":     strconv.Itoa(w.currDataY),
 			},
 		}
 		w.sendEvt <- msg
+		w.Window.View.Clear()
+		w.Window.View.SetCursor(0, 0)
 		return
 	}
 	if ch == 0 {

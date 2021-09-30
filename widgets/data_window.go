@@ -62,10 +62,14 @@ func (w *DataWindow) EventHandler() {
 		case messages.UpdateValueMsg:
 			// Its edit mode now, extract the value and show it
 			w.G.Update(func(g *gocui.Gui) error {
+				log.Infof("DataWindow: updateValue %s %s %s", msg.Data["X"], msg.Data["Y"])
 				value := msg.Data["value"]
 				X, _ := strconv.Atoi(msg.Data["X"])
 				Y, _ := strconv.Atoi(msg.Data["Y"])
-				w.d.Set(Y, X, value)
+				err := w.d.Set(Y, X, value)
+				if err != nil {
+					log.Errorf("DataWindow: failed set %v", err)
+				}
 				return nil
 			})
 		}
@@ -176,6 +180,7 @@ func (w *DataWindow) Animate(g *gocui.Gui) error {
 		w.Window.View.Clear()
 		w.Window.View.Write(w.formatData())
 		w.changed = false
+		w.d.ClearChanged()
 	}
 	return nil
 }
@@ -235,7 +240,7 @@ func (w *DataWindow) formatData() []byte {
 			}
 			line += tl
 		}
-		log.Debugln(line)
+		log.Infoln(line)
 		line += "\n"
 	}
 

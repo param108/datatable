@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/csv"
 	"os"
+	"sync"
 
 	"github.com/param108/datatable/types"
 	"github.com/pkg/errors"
@@ -16,6 +17,7 @@ type CSV struct {
 	Data           [][]*Metadata
 	columnMetadata []*ColumnMetadata
 	changed        bool
+	mx             sync.RWMutex
 }
 
 type Metadata struct {
@@ -95,7 +97,11 @@ func (c *CSV) Set(row, col int, value interface{}) error {
 	}
 
 	if v, ok := value.(string); ok {
+		c.mx.Lock()
 		c.data[row][col] = v
+		c.Data[row][col].Value = v
+		c.changed = true
+		c.mx.Unlock()
 	} else {
 		return errors.New("invalid value")
 	}
@@ -117,6 +123,9 @@ func (c *CSV) Get(row, col int) (interface{}, error) {
 	if row == 0 {
 		return nil, errors.New("invalid row")
 	}
+
+	c.mx.RLock()
+	defer c.mx.RUnlock()
 	return c.data[row][col], nil
 }
 
@@ -189,5 +198,13 @@ func (c *CSV) GetRow(row int) ([]*Metadata, error) {
 }
 
 func (c *CSV) Changed() bool {
+	c.mx.RLock()
+	defer c.mx.RUnlock()
 	return c.changed
+}
+
+func (c *CSV) ClearChanged() {
+	c.mx.Lock()
+	defer c.mx.Unlock()
+	c.changed = false
 }

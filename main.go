@@ -42,6 +42,11 @@ func (ui *UI) CentralCommand(CNCrd, CNCwr chan *messages.Message) {
 				ui.CV = v
 				return nil
 			})
+		case messages.UpdateValueMsg:
+			ui.G.Update(func(g *gocui.Gui) error {
+				g.SetCurrentView("Data")
+				return nil
+			})
 		default:
 			logrus.Errorf("CNC: invalid message key: %s", msg.Key)
 			return

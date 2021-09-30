@@ -32,5 +32,6 @@ type DataSource interface {
 	GetColumn(col int) ([]*Metadata, error)
 	GetRow(row int) ([]*Metadata, error)
 	Changed() bool
+	ClearChanged()
 	Set(row, col int, value interface{}) error
 }
