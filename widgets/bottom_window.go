@@ -2,16 +2,38 @@ package widgets
 
 import (
 	"github.com/jroimartin/gocui"
+	"github.com/param108/datatable/messages"
 	log "github.com/sirupsen/logrus"
 )
 
 type BottomWindow struct {
 	*Window
+	sendEvt chan *messages.Message
+	rdEvt   chan *messages.Message
 }
 
-func NewBottomWindow(g *gocui.Gui, name string) *BottomWindow {
-	w := &BottomWindow{&Window{Name: name, G: g}}
+func (w *BottomWindow) EventHandler() {
+	for msg := range w.rdEvt {
+		switch msg.Key {
+		case messages.SetEditModeMsg:
+			// Its edit mode now, extract the value and show it
+			w.G.Update(func(g *gocui.Gui) error {
+				w.Window.View.Clear()
+				w.Window.View.Write([]byte(msg.Data["value"]))
+				return nil
+			})
+		}
+	}
+}
+
+func (w *BottomWindow) CustomSetup() {
+
+}
+
+func NewBottomWindow(g *gocui.Gui, name string, cltRd, cltWr chan *messages.Message) *BottomWindow {
+	w := &BottomWindow{Window: &Window{Name: name, G: g}, sendEvt: cltWr, rdEvt: cltRd}
 	w.Layout()
+	go w.EventHandler()
 	return w
 }
 

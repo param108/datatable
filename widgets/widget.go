@@ -10,5 +10,6 @@ type Widget interface {
 	GetView() *gocui.View
 	GetName() string
 	Layout()
+	CustomSetup()
 	SetKeys() error
 }

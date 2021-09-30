@@ -11,7 +11,9 @@ import (
 	"github.com/mitchellh/colorstring"
 	"github.com/param108/datatable/data"
 	"github.com/param108/datatable/keybindings"
+	"github.com/param108/datatable/messages"
 	log "github.com/sirupsen/logrus"
+	"strconv"
 )
 
 const (
@@ -33,16 +35,46 @@ type DataWindow struct {
 	changed bool
 	crsr    *Cursor
 	ks      *keybindings.KeyStore
+	sendEvt chan *messages.Message
+	rdEvt   chan *messages.Message
 }
 
-func NewDataWindow(g *gocui.Gui, name string, d data.DataSource, ks *keybindings.KeyStore) *DataWindow {
+func NewDataWindow(g *gocui.Gui, name string, d data.DataSource, ks *keybindings.KeyStore,
+	rdEvt, sendEvt chan *messages.Message) *DataWindow {
 	w := &DataWindow{Window: &Window{Name: name, G: g}, d: d}
 	w.Layout()
 	w.changed = true
 	w.crsr = &Cursor{X: 0, Y: 1}
 	w.ks = ks
+	w.sendEvt = sendEvt
+	w.rdEvt = rdEvt
 	return w
 }
+
+func (w *DataWindow) Edit(v *gocui.View, key gocui.Key, ch rune, mod gocui.Modifier) {
+	log.Infof("Edit: %s", string(ch))
+
+	switch ch {
+	case 'e':
+		value, err := w.d.Get(w.crsr.Y, w.crsr.X)
+		if err != nil {
+			log.Errorf("invalid ordinates col: %d row: %d", w.crsr.Y, w.crsr.X)
+			return
+		}
+
+		msg := &messages.Message{
+			Key: messages.SetEditModeMsg,
+			Data: map[string]string{
+				"value": value.(string),
+				"X":     strconv.Itoa(w.crsr.X),
+				"Y":     strconv.Itoa(w.crsr.Y),
+			},
+		}
+		w.sendEvt <- msg
+	}
+	return
+}
+
 func (w *DataWindow) SetKeys() error {
 	err := w.ks.AddKey(w.Window.Name, gocui.KeyArrowUp, gocui.ModNone, w.CreateArrowKeyHandler(arrowUp))
 	if err != nil {
@@ -67,6 +99,7 @@ func (w *DataWindow) SetKeys() error {
 		log.Errorf("Failed to add key handler %+v", err)
 		return err
 	}
+
 	return nil
 }
 
@@ -124,6 +157,11 @@ func (w *DataWindow) Animate(g *gocui.Gui) error {
 		w.changed = false
 	}
 	return nil
+}
+
+func (w *DataWindow) CustomSetup() {
+	w.View.Editor = w
+	w.View.Editable = true
 }
 
 func (w *DataWindow) Layout() {
