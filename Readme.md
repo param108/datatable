@@ -8,11 +8,11 @@ Play with csv's on a terminal
 
 # Setup
     
-    `make datatable`
+    make datatable
     
 # Run
 
-    `./datatable`
+    ./datatable
     
 It will read the file `data.csv`  and show it in the ui.
 Use your arrow keys to choose different entries in the csv.
