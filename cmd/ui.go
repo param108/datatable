@@ -146,7 +146,16 @@ func quit(g *gocui.Gui, v *gocui.View) error {
 }
 
 var uiCmd = &cli.Command{
-	Name:   "ui",
+	Name:  "ui",
+	Usage: "run the ui to manually edit your csv",
+	Flags: []cli.Flag{
+		&cli.StringFlag{
+			Name:     "file",
+			Aliases:  []string{"f"},
+			Required: true,
+			Usage:    "csv file to open",
+		},
+	},
 	Action: uiAction,
 }
 
@@ -161,7 +170,9 @@ func uiAction(c *cli.Context) error {
 
 	logrus.Infof("Created gui %p", g)
 
-	ui, err := CreateUI(g, "data.csv")
+	filename := c.String("file")
+
+	ui, err := CreateUI(g, filename)
 	if err != nil {
 		logrus.Errorf("create failed: %v", err)
 		return errors.Wrap(err, "failed create ui")
