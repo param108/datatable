@@ -5,11 +5,11 @@ import (
 	"encoding/csv"
 	"io/ioutil"
 	"os"
-	"strings"
 	"sync"
 
 	"github.com/param108/datatable/types"
 	"github.com/pkg/errors"
+	log "github.com/sirupsen/logrus"
 )
 
 type CSV struct {
@@ -40,11 +40,25 @@ func NewCSV(filename string) (DataSource, error) {
 }
 
 func (c *CSV) Save() error {
-	data := ""
-	for _, row := range c.data {
-		data += strings.Join(row, ",") + "\n"
+	file, err := ioutil.TempFile("", "datatable")
+	if err != nil {
+		log.Errorf("failed to open temp file %v", err)
+		return err
 	}
-	return ioutil.WriteFile(c.Filename, []byte(data), 0666)
+
+	oldpath := file.Name()
+	writer := csv.NewWriter(file)
+
+	err = writer.WriteAll(c.data)
+	if err != nil {
+		log.Errorf("failed to write file %v", err)
+		return err
+	}
+
+	file.Close()
+
+	os.Rename(oldpath, c.Filename)
+	return nil
 }
 
 //Create - Instantiates the csv data source
