@@ -10,9 +10,9 @@ Play with csv's on a terminal
     
     make datatable
     
-# Run
+# Run UI
 
-    ./datatable
+    ./datatable ui
     
 It will read the file `data.csv`  and show it in the ui.
 Use your arrow keys to choose different entries in the csv.
