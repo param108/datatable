@@ -11,4 +11,5 @@ const (
 	SetEditModeMsg    = MessageName("setEditMode")
 	UpdateValueMsg    = MessageName("updateValue")
 	SetExploreModeMsg = MessageName("setExploreMode")
+	CloseHelpWindow   = MessageName("closeHelpWindow")
 )

@@ -42,6 +42,13 @@ func (ui *UI) CentralCommand(CNCrd, CNCwr chan *messages.Message) {
 				g.SetCurrentView("Data")
 				return nil
 			})
+		case messages.CloseHelpWindow:
+			ui.G.Update(func(g *gocui.Gui) error {
+				g.SetViewOnBottom("Help")
+				g.SetCurrentView("Data")
+
+				return nil
+			})
 		default:
 			logrus.Errorf("CNC: invalid message key: %s", msg.Key)
 			return
@@ -72,11 +79,22 @@ func CreateUI(g *gocui.Gui, filename string) (*UI, error) {
 
 	cltRd, cltWr = TheUI.Mgr.RegisterWindow()
 	TheUI.AddWidget(widgets.NewBottomWindow(g, "Bottom", cltRd, cltWr))
+
+	cltRd, cltWr = TheUI.Mgr.RegisterWindow()
+	TheUI.AddWidget(widgets.NewHelpWindow(g, "Help", cltRd, cltWr))
 	TheUI.D = src
 
 	g.SetManagerFunc(TheUI.layout)
 
 	TheUI.KS.AddKey("", gocui.KeyCtrlC, gocui.ModNone, quit)
+	TheUI.KS.AddKey("", gocui.KeyCtrlH, gocui.ModNone, func(g *gocui.Gui, v *gocui.View) error {
+		g.Update(func(g *gocui.Gui) error {
+			g.SetViewOnTop("Help")
+			g.SetCurrentView("Help")
+			return nil
+		})
+		return nil
+	})
 
 	for _, w := range TheUI.W {
 		w.SetKeys()
@@ -107,7 +125,7 @@ func (ui *UI) layout(g *gocui.Gui) error {
 	}
 
 	if ui.CV == nil {
-		v, err := g.SetCurrentView("Data")
+		v, err := g.SetCurrentView("Help")
 		if err != nil {
 			panic(err)
 		}
