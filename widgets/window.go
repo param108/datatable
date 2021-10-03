@@ -2,7 +2,6 @@ package widgets
 
 import (
 	"github.com/jroimartin/gocui"
-	log "github.com/sirupsen/logrus"
 )
 
 type Window struct {
@@ -16,7 +15,6 @@ type Window struct {
 }
 
 func (w *Window) SetView() error {
-	log.Infof("view %s", w.Name)
 	v, err := w.G.SetView(w.Name, w.MinX, w.MinY, w.MaxX, w.MaxY)
 	if err != gocui.ErrUnknownView {
 		return err

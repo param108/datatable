@@ -61,6 +61,7 @@ func (w *HelpWindow) Edit(v *gocui.View, key gocui.Key, ch rune, mod gocui.Modif
 func (w *HelpWindow) CustomSetup() {
 	w.View.Editor = w
 	w.View.Editable = true
+	w.View.Clear()
 	w.View.Write([]byte(colorstring.Color(`
     [underline]DataTable[reset]
 

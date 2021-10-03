@@ -113,15 +113,13 @@ func (ui *UI) AddWidget(w widgets.Widget) {
 
 func (ui *UI) layout(g *gocui.Gui) error {
 	for _, w := range ui.W {
-		if w.GetView() == nil {
-			logrus.Debugf("Layout for view %s %p", w.GetName(), g)
-			w.Layout()
-			if err := w.SetView(); err != nil {
-				logrus.Errorf("Failed to setview %+v", err)
-				return err
-			}
-			w.CustomSetup()
+		logrus.Debugf("Layout for view %s %p", w.GetName(), g)
+		w.Layout()
+		if err := w.SetView(); err != nil {
+			logrus.Errorf("Failed to setview %+v", err)
+			return err
 		}
+		w.CustomSetup()
 	}
 
 	if ui.CV == nil {
