@@ -1,4 +1,4 @@
-package manager
+package eventbus
 
 import (
 	"sync"
@@ -7,7 +7,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-type Manager struct {
+type EventBus struct {
 	in     chan *messages.Message
 	out    chan *messages.Message
 	mx     sync.Mutex
@@ -15,9 +15,9 @@ type Manager struct {
 	wg     sync.WaitGroup
 }
 
-func NewManager() *Manager {
+func NewEventBus() *EventBus {
 
-	mgr := &Manager{
+	mgr := &EventBus{
 		in:     make(chan *messages.Message),
 		out:    make(chan *messages.Message),
 		fanout: []chan *messages.Message{},
@@ -28,7 +28,7 @@ func NewManager() *Manager {
 	return mgr
 }
 
-func (mgr *Manager) Boss() {
+func (mgr *EventBus) Boss() {
 	for msg := range mgr.in {
 		log.Infof("Boss: %s", msg.Key)
 		mgr.out <- msg
@@ -37,7 +37,7 @@ func (mgr *Manager) Boss() {
 
 //mgr -> gofanout -> (many)outer -> (many)widgets
 //   out       mgr.fanout
-func (mgr *Manager) gofanout() {
+func (mgr *EventBus) gofanout() {
 	for msg := range mgr.out {
 		mgr.mx.Lock()
 		for _, ch := range mgr.fanout {
@@ -47,7 +47,7 @@ func (mgr *Manager) gofanout() {
 	}
 }
 
-func (mgr *Manager) outer(fromMgr chan *messages.Message, toClient chan *messages.Message) {
+func (mgr *EventBus) outer(fromMgr chan *messages.Message, toClient chan *messages.Message) {
 	var (
 		to      chan *messages.Message
 		msgs    []*messages.Message
@@ -76,7 +76,7 @@ func (mgr *Manager) outer(fromMgr chan *messages.Message, toClient chan *message
 
 // (many)widget -> (many)gofanin -> mgr
 //                              (in)
-func (mgr *Manager) gofanin(fromClient chan *messages.Message, toMgr chan *messages.Message) {
+func (mgr *EventBus) gofanin(fromClient chan *messages.Message, toMgr chan *messages.Message) {
 	var (
 		to      chan *messages.Message
 		msgs    []*messages.Message
@@ -106,7 +106,7 @@ func (mgr *Manager) gofanin(fromClient chan *messages.Message, toMgr chan *messa
 //   out       mgr.fanout
 // (many)widget -> (many)gofanin -> mgr
 //                              (in)
-func (mgr *Manager) RegisterWindow() (cltrd chan *messages.Message, cltwr chan *messages.Message) {
+func (mgr *EventBus) RegisterWindow() (cltrd chan *messages.Message, cltwr chan *messages.Message) {
 	cltrd = make(chan *messages.Message)
 	cltwr = make(chan *messages.Message)
 	fanoutchan := make(chan *messages.Message)

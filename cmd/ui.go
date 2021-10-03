@@ -3,8 +3,8 @@ package cmd
 import (
 	"github.com/jroimartin/gocui"
 	"github.com/param108/datatable/data"
+	"github.com/param108/datatable/eventbus"
 	"github.com/param108/datatable/keybindings"
-	"github.com/param108/datatable/manager"
 	"github.com/param108/datatable/messages"
 	"github.com/param108/datatable/widgets"
 	"github.com/pkg/errors"
@@ -19,7 +19,7 @@ type UI struct {
 	D    data.DataSource
 	KS   *keybindings.KeyStore
 	CV   *gocui.View
-	Mgr  *manager.Manager
+	EB   *eventbus.EventBus
 	F    string
 	quit chan int
 }
@@ -61,12 +61,12 @@ func CreateUI(g *gocui.Gui, filename string) (*UI, error) {
 		W:    map[string]widgets.Widget{},
 		G:    g,
 		KS:   keybindings.NewKeyStore(g),
-		Mgr:  manager.NewManager(),
+		EB:   eventbus.NewEventBus(),
 		F:    filename,
 		quit: make(chan int),
 	}
 
-	CNCrd, CNCwr := TheUI.Mgr.RegisterWindow()
+	CNCrd, CNCwr := TheUI.EB.RegisterWindow()
 	go TheUI.CentralCommand(CNCrd, CNCwr)
 
 	src, err := data.NewCSV(filename)
@@ -74,13 +74,13 @@ func CreateUI(g *gocui.Gui, filename string) (*UI, error) {
 		panic(err)
 	}
 
-	cltRd, cltWr := TheUI.Mgr.RegisterWindow()
+	cltRd, cltWr := TheUI.EB.RegisterWindow()
 	TheUI.AddWidget(widgets.NewDataWindow(g, "Data", src, TheUI.KS, cltRd, cltWr))
 
-	cltRd, cltWr = TheUI.Mgr.RegisterWindow()
+	cltRd, cltWr = TheUI.EB.RegisterWindow()
 	TheUI.AddWidget(widgets.NewBottomWindow(g, "Bottom", cltRd, cltWr))
 
-	cltRd, cltWr = TheUI.Mgr.RegisterWindow()
+	cltRd, cltWr = TheUI.EB.RegisterWindow()
 	TheUI.AddWidget(widgets.NewHelpWindow(g, "Help", cltRd, cltWr))
 	TheUI.D = src
 
