@@ -25,6 +25,8 @@ to edit the value.
 
 Finally, after making all the changes you want, type `s` to save the changes back to the csv.
 
+Type `w` to save as.
+
 press `ctrl-h` at any time  to show the above help.
 
 press `ctrl-c` to exit

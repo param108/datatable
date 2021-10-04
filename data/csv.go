@@ -61,6 +61,30 @@ func (c *CSV) Save() error {
 	return nil
 }
 
+func (c *CSV) SaveAs(newfile string) error {
+	file, err := ioutil.TempFile("", "datatable")
+	if err != nil {
+		log.Errorf("failed to open temp file %v", err)
+		return err
+	}
+
+	oldpath := file.Name()
+	writer := csv.NewWriter(file)
+
+	err = writer.WriteAll(c.data)
+	if err != nil {
+		log.Errorf("failed to write file %v", err)
+		return err
+	}
+
+	file.Close()
+
+	if err := os.Rename(oldpath, newfile); err != nil {
+		return err
+	}
+	return nil
+}
+
 //Create - Instantiates the csv data source
 // Required Keys in Context
 // filename - the filename for the data
@@ -231,4 +255,8 @@ func (c *CSV) ClearChanged() {
 	c.mx.Lock()
 	defer c.mx.Unlock()
 	c.changed = false
+}
+
+func (c *CSV) Source() string {
+	return c.Filename
 }

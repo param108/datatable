@@ -29,6 +29,7 @@ func (ui *UI) CentralCommand(CNCrd, CNCwr chan *messages.Message) {
 		switch msg.Key {
 		case messages.SetEditModeMsg:
 			ui.G.Update(func(g *gocui.Gui) error {
+				g.Cursor = true
 				v, err := ui.G.SetCurrentView("Bottom")
 				if err != nil {
 					logrus.Errorf("CNC: Failed to set view: Bottom")
@@ -39,6 +40,19 @@ func (ui *UI) CentralCommand(CNCrd, CNCwr chan *messages.Message) {
 			})
 		case messages.UpdateValueMsg:
 			ui.G.Update(func(g *gocui.Gui) error {
+				g.Cursor = false
+				g.SetCurrentView("Data")
+				return nil
+			})
+		case messages.SetSaveAsModeMsg:
+			ui.G.Update(func(g *gocui.Gui) error {
+				g.Cursor = true
+				g.SetCurrentView("Bottom")
+				return nil
+			})
+		case messages.SaveAsMsg:
+			ui.G.Update(func(g *gocui.Gui) error {
+				g.Cursor = false
 				g.SetCurrentView("Data")
 				return nil
 			})
@@ -89,6 +103,7 @@ func CreateUI(g *gocui.Gui, filename string) (*UI, error) {
 	TheUI.KS.AddKey("", gocui.KeyCtrlC, gocui.ModNone, quit)
 	TheUI.KS.AddKey("", gocui.KeyCtrlH, gocui.ModNone, func(g *gocui.Gui, v *gocui.View) error {
 		g.Update(func(g *gocui.Gui) error {
+			g.Cursor = false
 			g.SetViewOnTop("Help")
 			g.SetCurrentView("Help")
 			return nil

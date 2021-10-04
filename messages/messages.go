@@ -8,8 +8,12 @@ type Message struct {
 type MessageName string
 
 const (
-	SetEditModeMsg    = MessageName("setEditMode")
-	UpdateValueMsg    = MessageName("updateValue")
+	SetEditModeMsg = MessageName("setEditMode")
+	UpdateValueMsg = MessageName("updateValue")
+
 	SetExploreModeMsg = MessageName("setExploreMode")
 	CloseHelpWindow   = MessageName("closeHelpWindow")
+
+	SetSaveAsModeMsg = MessageName("setSaveAsMode")
+	SaveAsMsg        = MessageName("saveAs")
 )

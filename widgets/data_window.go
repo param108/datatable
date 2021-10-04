@@ -72,6 +72,11 @@ func (w *DataWindow) EventHandler() {
 				}
 				return nil
 			})
+		case messages.SaveAsMsg:
+			if err := w.d.SaveAs(msg.Data["value"]); err != nil {
+				// FIXME: Add a toast to notify the user
+				log.Errorf("data_window: Failed to save as %v", err)
+			}
 		}
 	}
 }
@@ -101,6 +106,15 @@ func (w *DataWindow) Edit(v *gocui.View, key gocui.Key, ch rune, mod gocui.Modif
 		if err != nil {
 			log.Errorf("failed to save %v", err)
 		}
+	case 'w':
+		msg := &messages.Message{
+			Key: messages.SetSaveAsModeMsg,
+			Data: map[string]string{
+				"value": w.d.Source(),
+			},
+		}
+		w.sendEvt <- msg
+
 	}
 	return
 }
