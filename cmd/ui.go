@@ -170,6 +170,7 @@ func (ui *UI) layout(g *gocui.Gui) error {
 		}
 		ui.CV = v
 		g.SetViewOnTop("Help")
+		g.SetViewOnBottom("Toast")
 	}
 
 	return nil
