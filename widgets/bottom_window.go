@@ -37,6 +37,8 @@ func (w *BottomWindow) EventHandler() {
 				w.currDataY, _ = strconv.Atoi(msg.Data["Y"])
 				w.Window.View.SetCursor(len(msg.Data["value"]), 0)
 				w.mode = editValueMode
+				g.SetCurrentView(w.Window.Name)
+				g.Cursor = true
 				return nil
 			})
 		case messages.SetSaveAsModeMsg:
@@ -47,6 +49,8 @@ func (w *BottomWindow) EventHandler() {
 				w.Window.View.Write([]byte(msg.Data["value"]))
 				w.Window.View.SetCursor(len(msg.Data["value"]), 0)
 				w.mode = saveAsMode
+				g.SetCurrentView(w.Window.Name)
+				g.Cursor = true
 				return nil
 			})
 

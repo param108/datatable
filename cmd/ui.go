@@ -30,7 +30,7 @@ func (ui *UI) CentralCommand(CNCrd, CNCwr chan *messages.Message) {
 		case messages.SetEditModeMsg:
 			ui.G.Update(func(g *gocui.Gui) error {
 				g.Cursor = true
-				v, err := ui.G.SetCurrentView("Bottom")
+				v, err := g.SetCurrentView("Bottom")
 				if err != nil {
 					logrus.Errorf("CNC: Failed to set view: Bottom")
 					return err
@@ -41,26 +41,45 @@ func (ui *UI) CentralCommand(CNCrd, CNCwr chan *messages.Message) {
 		case messages.UpdateValueMsg:
 			ui.G.Update(func(g *gocui.Gui) error {
 				g.Cursor = false
-				g.SetCurrentView("Data")
+				v, err := g.SetCurrentView("Data")
+				if err != nil {
+					logrus.Errorf("CNC: Failed to set view: Data")
+					return err
+				}
+				ui.CV = v
 				return nil
 			})
 		case messages.SetSaveAsModeMsg:
 			ui.G.Update(func(g *gocui.Gui) error {
 				g.Cursor = true
-				g.SetCurrentView("Bottom")
+				v, err := g.SetCurrentView("Bottom")
+				if err != nil {
+					logrus.Errorf("CNC: Failed to set view: Bottom")
+					return err
+				}
+				ui.CV = v
 				return nil
 			})
 		case messages.SaveAsMsg:
 			ui.G.Update(func(g *gocui.Gui) error {
 				g.Cursor = false
-				g.SetCurrentView("Data")
+				v, err := g.SetCurrentView("Data")
+				if err != nil {
+					logrus.Errorf("CNC: Failed to set view: Data")
+					return err
+				}
+				ui.CV = v
 				return nil
 			})
 		case messages.CloseHelpWindow:
 			ui.G.Update(func(g *gocui.Gui) error {
 				g.SetViewOnBottom("Help")
-				g.SetCurrentView("Data")
-
+				v, err := g.SetCurrentView("Data")
+				if err != nil {
+					logrus.Errorf("CNC: Failed to set view: Bottom")
+					return err
+				}
+				ui.CV = v
 				return nil
 			})
 		default:
@@ -89,6 +108,9 @@ func CreateUI(g *gocui.Gui, filename string) (*UI, error) {
 	}
 
 	cltRd, cltWr := TheUI.EB.RegisterWindow()
+	TheUI.AddWidget(widgets.NewToastWindow(g, "Toast", cltRd, cltWr))
+
+	cltRd, cltWr = TheUI.EB.RegisterWindow()
 	TheUI.AddWidget(widgets.NewDataWindow(g, "Data", src, TheUI.KS, cltRd, cltWr))
 
 	cltRd, cltWr = TheUI.EB.RegisterWindow()
@@ -96,7 +118,11 @@ func CreateUI(g *gocui.Gui, filename string) (*UI, error) {
 
 	cltRd, cltWr = TheUI.EB.RegisterWindow()
 	TheUI.AddWidget(widgets.NewHelpWindow(g, "Help", cltRd, cltWr))
+
 	TheUI.D = src
+
+	g.SetViewOnBottom("Toast")
+	g.SetViewOnTop("Help")
 
 	g.SetManagerFunc(TheUI.layout)
 
@@ -143,6 +169,7 @@ func (ui *UI) layout(g *gocui.Gui) error {
 			panic(err)
 		}
 		ui.CV = v
+		g.SetViewOnTop("Help")
 	}
 
 	return nil
@@ -212,7 +239,7 @@ func uiAction(c *cli.Context) error {
 	defer ui.Quit()
 
 	if err := g.MainLoop(); err != nil && err != gocui.ErrQuit {
-		logrus.Panicln(err)
+		logrus.Panicln(err.Error())
 	}
 
 	return nil

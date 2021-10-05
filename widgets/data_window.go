@@ -70,13 +70,35 @@ func (w *DataWindow) EventHandler() {
 				if err != nil {
 					log.Errorf("DataWindow: failed set %v", err)
 				}
+				g.Cursor = false
+				g.SetCurrentView(w.Window.Name)
 				return nil
 			})
 		case messages.SaveAsMsg:
 			if err := w.d.SaveAs(msg.Data["value"]); err != nil {
 				// FIXME: Add a toast to notify the user
 				log.Errorf("data_window: Failed to save as %v", err)
+				msg := &messages.Message{
+					Key: messages.ShowToastMsg,
+					Data: map[string]string{
+						"msg": fmt.Sprintf("Failed to save: %v", err),
+					},
+				}
+				w.sendEvt <- msg
+			} else {
+				msg := &messages.Message{
+					Key: messages.ShowToastMsg,
+					Data: map[string]string{
+						"msg": "Save Successful",
+					},
+				}
+				w.sendEvt <- msg
 			}
+			w.G.Update(func(g *gocui.Gui) error {
+				g.Cursor = false
+				g.SetCurrentView(w.Window.Name)
+				return nil
+			})
 		}
 	}
 }
@@ -105,6 +127,21 @@ func (w *DataWindow) Edit(v *gocui.View, key gocui.Key, ch rune, mod gocui.Modif
 		err := w.d.Save()
 		if err != nil {
 			log.Errorf("failed to save %v", err)
+			msg := &messages.Message{
+				Key: messages.ShowToastMsg,
+				Data: map[string]string{
+					"msg": fmt.Sprintf("Failed to save: %v", err),
+				},
+			}
+			w.sendEvt <- msg
+		} else {
+			msg := &messages.Message{
+				Key: messages.ShowToastMsg,
+				Data: map[string]string{
+					"msg": "Save Successful",
+				},
+			}
+			w.sendEvt <- msg
 		}
 	case 'w':
 		msg := &messages.Message{

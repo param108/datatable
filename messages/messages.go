@@ -16,4 +16,6 @@ const (
 
 	SetSaveAsModeMsg = MessageName("setSaveAsMode")
 	SaveAsMsg        = MessageName("saveAs")
+
+	ShowToastMsg = MessageName("showToast")
 )
