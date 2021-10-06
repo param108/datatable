@@ -12,10 +12,13 @@ const (
 	UpdateValueMsg = MessageName("updateValue")
 
 	SetExploreModeMsg = MessageName("setExploreMode")
-	CloseHelpWindow   = MessageName("closeHelpWindow")
+
+	ShowHelpWindow  = MessageName("showHelpWindow")
+	CloseHelpWindow = MessageName("closeHelpWindow")
 
 	SetSaveAsModeMsg = MessageName("setSaveAsMode")
 	SaveAsMsg        = MessageName("saveAs")
 
 	ShowToastMsg = MessageName("showToast")
+	HideToastMsg = MessageName("hideToast")
 )

@@ -39,6 +39,15 @@ type DataWindow struct {
 	rdEvt   chan *messages.Message
 }
 
+func (w *DataWindow) SetFocus() error {
+	w.Window.G.Cursor = false
+	if _, err := w.Window.G.SetCurrentView(w.Window.GetView().Name()); err != nil {
+		log.Errorf("bottomWindow: Failed to set view %v", err)
+		return err
+	}
+	return nil
+}
+
 func NewDataWindow(g *gocui.Gui, name string, d data.DataSource, ks *keybindings.KeyStore,
 	rdEvt, sendEvt chan *messages.Message) *DataWindow {
 	w := &DataWindow{Window: &Window{Name: name, G: g}, d: d}

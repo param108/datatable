@@ -24,6 +24,15 @@ type BottomWindow struct {
 	mode      string
 }
 
+func (w *BottomWindow) SetFocus() error {
+	w.Window.G.Cursor = true
+	if _, err := w.Window.G.SetCurrentView(w.Window.GetView().Name()); err != nil {
+		log.Errorf("bottomWindow: Failed to set view %v", err)
+		return err
+	}
+	return nil
+}
+
 func (w *BottomWindow) EventHandler() {
 	for msg := range w.rdEvt {
 		switch msg.Key {

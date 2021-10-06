@@ -15,6 +15,18 @@ type ToastWindow struct {
 	Msg            string
 }
 
+func (w *ToastWindow) SetFocus() error {
+	w.Window.G.Cursor = false
+	go func(g *gocui.Gui) {
+		<-time.NewTimer(time.Second * 1).C
+		msg := &messages.Message{
+			Key: messages.HideToastMsg,
+		}
+		w.sendEvt <- msg
+	}(w.G)
+	return nil
+}
+
 func (w *ToastWindow) Layout() {
 	maxX, maxY := w.G.Size()
 	w.MinX = maxX / 6
@@ -47,14 +59,6 @@ func (w *ToastWindow) EventHandler() {
 			w.Msg = msg.Data["msg"]
 			w.G.Update(func(g *gocui.Gui) error {
 				// show toast for 5 seconds
-				go func(g *gocui.Gui) {
-					<-time.NewTimer(time.Second * 1).C
-					g.Update(func(g *gocui.Gui) error {
-						g.SetViewOnBottom(w.Window.Name)
-						return nil
-					})
-				}(g)
-				g.SetViewOnTop(w.Window.Name)
 				return nil
 			})
 			// Its edit mode now, extract the value and show it

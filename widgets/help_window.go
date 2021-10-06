@@ -13,6 +13,16 @@ type HelpWindow struct {
 	rdEvt   chan *messages.Message
 }
 
+func (w *HelpWindow) SetFocus() error {
+	w.Window.G.Cursor = false
+	w.Window.G.SetViewOnTop(w.Window.GetView().Name())
+	if _, err := w.Window.G.SetCurrentView(w.Window.GetView().Name()); err != nil {
+		log.Errorf("bottomWindow: Failed to set view %v", err)
+		return err
+	}
+	return nil
+}
+
 func (w *HelpWindow) Layout() {
 	maxX, maxY := w.G.Size()
 	w.MinX = maxX / 6

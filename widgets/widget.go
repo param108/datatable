@@ -12,4 +12,5 @@ type Widget interface {
 	Layout()
 	CustomSetup()
 	SetKeys() error
+	SetFocus() error
 }
