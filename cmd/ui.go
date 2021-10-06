@@ -113,7 +113,6 @@ func (ui *UI) CentralCommand(CNCrd, CNCwr chan *messages.Message) {
 			ui.G.Update(func(g *gocui.Gui) error {
 				v := ui.CV.Name()
 				ui.Push(v)
-				g.SetViewOnTop("Toast")
 				err := ui.W["Toast"].SetFocus()
 				if err != nil {
 					logrus.Errorf("CNC: Failed to set view: Bottom")

@@ -17,6 +17,7 @@ type ToastWindow struct {
 
 func (w *ToastWindow) SetFocus() error {
 	w.Window.G.Cursor = false
+	w.Window.G.SetViewOnTop("Toast")
 	go func(g *gocui.Gui) {
 		<-time.NewTimer(time.Second * 1).C
 		msg := &messages.Message{
