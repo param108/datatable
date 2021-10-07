@@ -1,6 +1,8 @@
 package widgets
 
 import (
+	"context"
+
 	"github.com/jroimartin/gocui"
 	"github.com/mitchellh/colorstring"
 	"github.com/param108/datatable/messages"
@@ -11,6 +13,7 @@ type HelpWindow struct {
 	*Window
 	sendEvt chan *messages.Message
 	rdEvt   chan *messages.Message
+	ctx     context.Context
 }
 
 func (w *HelpWindow) SetFocus() error {
@@ -97,10 +100,11 @@ func (w *HelpWindow) SetKeys() error {
 	return nil
 }
 
-func NewHelpWindow(g *gocui.Gui, name string, rdEvt, sendEvt chan *messages.Message) *HelpWindow {
+func NewHelpWindow(ctx context.Context, g *gocui.Gui, name string, rdEvt, sendEvt chan *messages.Message) *HelpWindow {
 	w := &HelpWindow{Window: &Window{Name: name, G: g}}
 	w.Layout()
 	w.sendEvt = sendEvt
 	w.rdEvt = rdEvt
+	w.ctx = ctx
 	return w
 }

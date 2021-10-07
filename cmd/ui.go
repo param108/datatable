@@ -1,6 +1,10 @@
 package cmd
 
 import (
+	"context"
+	"sync"
+	"time"
+
 	"github.com/jroimartin/gocui"
 	"github.com/param108/datatable/data"
 	"github.com/param108/datatable/eventbus"
@@ -10,19 +14,20 @@ import (
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/urfave/cli/v2"
-	"time"
 )
 
 type UI struct {
-	W     map[string]widgets.Widget
-	G     *gocui.Gui
-	D     data.DataSource
-	KS    *keybindings.KeyStore
-	CV    *gocui.View
-	EB    *eventbus.EventBus
-	F     string
-	Stack []string
-	quit  chan int
+	W          map[string]widgets.Widget
+	G          *gocui.Gui
+	D          data.DataSource
+	KS         *keybindings.KeyStore
+	CV         *gocui.View
+	EB         *eventbus.EventBus
+	F          string
+	Stack      []string
+	WG         sync.WaitGroup
+	ctx        context.Context
+	cancelFunc context.CancelFunc
 }
 
 // push a view name on stack
@@ -46,111 +51,123 @@ func (ui *UI) Pop(def string) string {
 }
 
 func (ui *UI) CentralCommand(CNCrd, CNCwr chan *messages.Message) {
-	for msg := range CNCrd {
-		logrus.Infof("CNC: message %s", msg.Key)
+	for {
+		select {
+		case msg := <-CNCrd:
+			logrus.Infof("CNC: message %s", msg.Key)
 
-		switch msg.Key {
-		case messages.SetEditModeMsg:
-			ui.G.Update(func(g *gocui.Gui) error {
-				err := ui.W["Bottom"].SetFocus()
-				if err != nil {
-					logrus.Errorf("CNC: Failed to set view: Bottom")
-					return err
-				}
-				ui.CV = ui.W["Bottom"].GetView()
-				return nil
-			})
-		case messages.UpdateValueMsg:
-			ui.G.Update(func(g *gocui.Gui) error {
-				err := ui.W["Data"].SetFocus()
-				if err != nil {
-					logrus.Errorf("CNC: Failed to set view: Bottom")
-					return err
-				}
-				ui.CV = ui.W["Data"].GetView()
-				return nil
-			})
-		case messages.SetSaveAsModeMsg:
-			ui.G.Update(func(g *gocui.Gui) error {
-				err := ui.W["Bottom"].SetFocus()
-				if err != nil {
-					logrus.Errorf("CNC: Failed to set view: Bottom")
-					return err
-				}
-				ui.CV = ui.W["Bottom"].GetView()
-				return nil
-			})
-		case messages.SaveAsMsg:
-			ui.G.Update(func(g *gocui.Gui) error {
-				err := ui.W["Data"].SetFocus()
-				if err != nil {
-					logrus.Errorf("CNC: Failed to set view: Bottom")
-					return err
-				}
-				ui.CV = ui.W["Data"].GetView()
-				return nil
-			})
-		case messages.ShowHelpWindow:
-			ui.G.Update(func(g *gocui.Gui) error {
-				ui.Push(ui.CV.Name())
-				ui.W["Help"].SetFocus()
-				ui.CV = ui.W["Help"].GetView()
-				return nil
-			})
-		case messages.CloseHelpWindow:
-			ui.G.Update(func(g *gocui.Gui) error {
-				v := ui.Pop("Data")
-				g.SetViewOnBottom("Help")
-				err := ui.W[v].SetFocus()
-				if err != nil {
-					logrus.Errorf("CNC: Failed to set view: Bottom")
-					return err
-				}
-				ui.CV = ui.W[v].GetView()
-				return nil
-			})
-		case messages.ShowToastMsg:
-			ui.G.Update(func(g *gocui.Gui) error {
-				v := ui.CV.Name()
-				ui.Push(v)
-				err := ui.W["Toast"].SetFocus()
-				if err != nil {
-					logrus.Errorf("CNC: Failed to set view: Bottom")
-					return err
-				}
-				ui.CV = ui.W["Toast"].GetView()
-				return nil
-			})
-		case messages.HideToastMsg:
-			ui.G.Update(func(g *gocui.Gui) error {
-				v := ui.Pop("Data")
-				g.SetViewOnBottom("Toast")
-				err := ui.W[v].SetFocus()
-				if err != nil {
-					logrus.Errorf("CNC: Failed to set view: Bottom")
-					return err
-				}
-				ui.CV = ui.W[v].GetView()
-				return nil
-			})
-		default:
-			logrus.Errorf("CNC: invalid message key: %s", msg.Key)
+			switch msg.Key {
+			case messages.SetEditModeMsg:
+				ui.G.Update(func(g *gocui.Gui) error {
+					err := ui.W["Bottom"].SetFocus()
+					if err != nil {
+						logrus.Errorf("CNC: Failed to set view: Bottom")
+						return err
+					}
+					ui.CV = ui.W["Bottom"].GetView()
+					return nil
+				})
+			case messages.UpdateValueMsg:
+				ui.G.Update(func(g *gocui.Gui) error {
+					err := ui.W["Data"].SetFocus()
+					if err != nil {
+						logrus.Errorf("CNC: Failed to set view: Bottom")
+						return err
+					}
+					ui.CV = ui.W["Data"].GetView()
+					return nil
+				})
+			case messages.SetSaveAsModeMsg:
+				ui.G.Update(func(g *gocui.Gui) error {
+					err := ui.W["Bottom"].SetFocus()
+					if err != nil {
+						logrus.Errorf("CNC: Failed to set view: Bottom")
+						return err
+					}
+					ui.CV = ui.W["Bottom"].GetView()
+					return nil
+				})
+			case messages.SaveAsMsg:
+				ui.G.Update(func(g *gocui.Gui) error {
+					err := ui.W["Data"].SetFocus()
+					if err != nil {
+						logrus.Errorf("CNC: Failed to set view: Bottom")
+						return err
+					}
+					ui.CV = ui.W["Data"].GetView()
+					return nil
+				})
+			case messages.ShowHelpWindow:
+				ui.G.Update(func(g *gocui.Gui) error {
+					ui.Push(ui.CV.Name())
+					ui.W["Help"].SetFocus()
+					ui.CV = ui.W["Help"].GetView()
+					return nil
+				})
+			case messages.CloseHelpWindow:
+				ui.G.Update(func(g *gocui.Gui) error {
+					v := ui.Pop("Data")
+					g.SetViewOnBottom("Help")
+					err := ui.W[v].SetFocus()
+					if err != nil {
+						logrus.Errorf("CNC: Failed to set view: Bottom")
+						return err
+					}
+					ui.CV = ui.W[v].GetView()
+					return nil
+				})
+			case messages.ShowToastMsg:
+				ui.G.Update(func(g *gocui.Gui) error {
+					v := ui.CV.Name()
+					ui.Push(v)
+					err := ui.W["Toast"].SetFocus()
+					if err != nil {
+						logrus.Errorf("CNC: Failed to set view: Bottom")
+						return err
+					}
+					ui.CV = ui.W["Toast"].GetView()
+					return nil
+				})
+			case messages.HideToastMsg:
+				ui.G.Update(func(g *gocui.Gui) error {
+					v := ui.Pop("Data")
+					g.SetViewOnBottom("Toast")
+					err := ui.W[v].SetFocus()
+					if err != nil {
+						logrus.Errorf("CNC: Failed to set view: Bottom")
+						return err
+					}
+					ui.CV = ui.W[v].GetView()
+					return nil
+				})
+			default:
+				logrus.Errorf("CNC: invalid message key: %s", msg.Key)
+			}
+		case <-ui.ctx.Done():
+			logrus.Info("exitting CNC")
+			return
 		}
 	}
 }
 
 func CreateUI(g *gocui.Gui, filename string) (*UI, error) {
+	ctx, cancelFunc := context.WithCancel(context.Background())
 	TheUI := &UI{
-		W:    map[string]widgets.Widget{},
-		G:    g,
-		KS:   keybindings.NewKeyStore(g),
-		EB:   eventbus.NewEventBus(),
-		F:    filename,
-		quit: make(chan int),
+		W:          map[string]widgets.Widget{},
+		G:          g,
+		KS:         keybindings.NewKeyStore(g),
+		EB:         eventbus.NewEventBus(ctx),
+		F:          filename,
+		ctx:        ctx,
+		cancelFunc: cancelFunc,
 	}
 
 	CNCrd, CNCwr := TheUI.EB.RegisterWindow()
-	go TheUI.CentralCommand(CNCrd, CNCwr)
+	TheUI.WG.Add(1)
+	go func() {
+		defer TheUI.WG.Done()
+		TheUI.CentralCommand(CNCrd, CNCwr)
+	}()
 
 	src, err := data.NewCSV(filename)
 	if err != nil {
@@ -192,7 +209,9 @@ func CreateUI(g *gocui.Gui, filename string) (*UI, error) {
 		w.SetKeys()
 	}
 
+	TheUI.WG.Add(1)
 	go func() {
+		defer TheUI.WG.Done()
 		TheUI.animate(g)
 	}()
 
@@ -240,14 +259,20 @@ func (ui *UI) animate(g *gocui.Gui) {
 			for _, w := range ui.W {
 				g.Update(w.Animate)
 			}
-		case <-ui.quit:
+		case <-ui.ctx.Done():
 			return
 		}
 	}
 }
 
 func (ui *UI) Quit() {
-	close(ui.quit)
+	ui.cancelFunc()
+	logrus.Infof("cancelFunc Called")
+	ui.EB.Wait()
+	logrus.Infof("EB Done")
+	ui.WG.Wait()
+	logrus.Infof("UI Done")
+
 }
 
 func quit(g *gocui.Gui, v *gocui.View) error {

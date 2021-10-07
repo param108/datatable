@@ -7,6 +7,7 @@ import (
 
 	"fmt"
 
+	"context"
 	"github.com/jroimartin/gocui"
 	"github.com/mitchellh/colorstring"
 	"github.com/param108/datatable/data"
@@ -48,11 +49,12 @@ func (w *DataWindow) SetFocus() error {
 	return nil
 }
 
-func NewDataWindow(g *gocui.Gui, name string, d data.DataSource, ks *keybindings.KeyStore,
+func NewDataWindow(ctx context.Context, g *gocui.Gui, name string, d data.DataSource, ks *keybindings.KeyStore,
 	rdEvt, sendEvt chan *messages.Message) *DataWindow {
 	w := &DataWindow{Window: &Window{Name: name, G: g}, d: d}
 	w.Layout()
 	w.changed = true
+	w.ctx = ctx
 	w.crsr = &Cursor{X: 0, Y: 1}
 	w.ks = ks
 	w.sendEvt = sendEvt

@@ -1,9 +1,11 @@
 package widgets
 
 import (
+	"context"
 	"time"
 
 	"fmt"
+
 	"github.com/jroimartin/gocui"
 	"github.com/param108/datatable/messages"
 	log "github.com/sirupsen/logrus"
@@ -13,6 +15,7 @@ type ToastWindow struct {
 	*Window
 	sendEvt, rdEvt chan *messages.Message
 	Msg            string
+	ctx            context.Context
 }
 
 func (w *ToastWindow) SetFocus() error {
@@ -68,11 +71,12 @@ func (w *ToastWindow) EventHandler() {
 	}
 }
 
-func NewToastWindow(g *gocui.Gui, name string, rdEvt, sendEvt chan *messages.Message) *ToastWindow {
+func NewToastWindow(ctx context.Context, g *gocui.Gui, name string, rdEvt, sendEvt chan *messages.Message) *ToastWindow {
 	w := &ToastWindow{Window: &Window{Name: name, G: g}}
 	w.Layout()
 	w.sendEvt = sendEvt
 	w.rdEvt = rdEvt
+	w.ctx = ctx
 	go w.EventHandler()
 
 	return w

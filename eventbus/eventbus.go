@@ -1,6 +1,7 @@
 package eventbus
 
 import (
+	"context"
 	"sync"
 
 	"github.com/param108/datatable/messages"
@@ -13,37 +14,72 @@ type EventBus struct {
 	mx     sync.Mutex
 	fanout []chan *messages.Message
 	wg     sync.WaitGroup
+	ctx    context.Context
 }
 
-func NewEventBus() *EventBus {
+func NewEventBus(ctx context.Context) *EventBus {
 
 	mgr := &EventBus{
 		in:     make(chan *messages.Message),
 		out:    make(chan *messages.Message),
 		fanout: []chan *messages.Message{},
+		ctx:    ctx,
 	}
 
-	go mgr.gofanout()
-	go mgr.Boss()
+	mgr.wg.Add(1)
+	go func() {
+		defer mgr.wg.Done()
+		mgr.gofanout()
+	}()
+
+	mgr.wg.Add(1)
+	go func() {
+		defer mgr.wg.Done()
+		mgr.Boss()
+	}()
+
 	return mgr
 }
 
 func (mgr *EventBus) Boss() {
-	for msg := range mgr.in {
-		log.Infof("Boss: %s", msg.Key)
-		mgr.out <- msg
+	for {
+		select {
+		case msg := <-mgr.in:
+			log.Infof("Boss: %s", msg.Key)
+			select {
+			case mgr.out <- msg:
+			case <-mgr.ctx.Done():
+				log.Infof("Exitting Boss: context")
+				return
+			}
+		case <-mgr.ctx.Done():
+			log.Infof("Exitting Boss: context")
+			return
+		}
 	}
 }
 
 //mgr -> gofanout -> (many)outer -> (many)widgets
 //   out       mgr.fanout
 func (mgr *EventBus) gofanout() {
-	for msg := range mgr.out {
-		mgr.mx.Lock()
-		for _, ch := range mgr.fanout {
-			ch <- msg
+	for {
+		select {
+		case msg := <-mgr.out:
+			mgr.mx.Lock()
+			for _, ch := range mgr.fanout {
+				select {
+				case ch <- msg:
+				case <-mgr.ctx.Done():
+					log.Infof("Exitting gofanout")
+					mgr.mx.Unlock()
+					return
+				}
+			}
+			mgr.mx.Unlock()
+		case <-mgr.ctx.Done():
+			log.Infof("Exitting gofanout")
+			return
 		}
-		mgr.mx.Unlock()
 	}
 }
 
@@ -70,6 +106,9 @@ func (mgr *EventBus) outer(fromMgr chan *messages.Message, toClient chan *messag
 			} else {
 				currmsg = msgs[0]
 			}
+		case <-mgr.ctx.Done():
+			log.Infof("exitting outer")
+			return
 		}
 	}
 }
@@ -98,6 +137,10 @@ func (mgr *EventBus) gofanin(fromClient chan *messages.Message, toMgr chan *mess
 			} else {
 				currmsg = msgs[0]
 			}
+		case <-mgr.ctx.Done():
+			log.Infof("exitting gofanin")
+			return
+
 		}
 	}
 }
@@ -115,8 +158,22 @@ func (mgr *EventBus) RegisterWindow() (cltrd chan *messages.Message, cltwr chan 
 	mgr.fanout = append(mgr.fanout, fanoutchan)
 	mgr.mx.Unlock()
 
-	go mgr.outer(fanoutchan, cltrd)
-	go mgr.gofanin(cltwr, mgr.in)
+	mgr.wg.Add(1)
+	go func() {
+		defer mgr.wg.Done()
+		mgr.outer(fanoutchan, cltrd)
+	}()
+
+	mgr.wg.Add(1)
+	go func() {
+		defer mgr.wg.Done()
+		mgr.gofanin(cltwr, mgr.in)
+	}()
 
 	return cltrd, cltwr
+}
+
+// cancel the context and then call this
+func (mgr *EventBus) Wait() {
+	mgr.wg.Wait()
 }

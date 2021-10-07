@@ -1,6 +1,7 @@
 package widgets
 
 import (
+	"context"
 	"strconv"
 
 	"strings"
@@ -22,6 +23,7 @@ type BottomWindow struct {
 	currDataX int
 	currDataY int
 	mode      string
+	ctx       context.Context
 }
 
 func (w *BottomWindow) SetFocus() error {
@@ -124,8 +126,9 @@ func (w *BottomWindow) CustomSetup() {
 	//w.View.SetCursor(0, 0)
 }
 
-func NewBottomWindow(g *gocui.Gui, name string, cltRd, cltWr chan *messages.Message) *BottomWindow {
+func NewBottomWindow(ctx context.Context, g *gocui.Gui, name string, cltRd, cltWr chan *messages.Message) *BottomWindow {
 	w := &BottomWindow{Window: &Window{Name: name, G: g}, sendEvt: cltWr, rdEvt: cltRd}
+	w.ctx = ctx
 	w.Layout()
 	go w.EventHandler()
 	return w

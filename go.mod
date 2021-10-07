@@ -9,5 +9,6 @@ require (
 	github.com/sirupsen/logrus v1.8.1
 	github.com/stretchr/testify v1.2.2
 	github.com/urfave/cli/v2 v2.3.0
+	golang.org/x/net v0.0.0-20211007125505-59d4e928ea9d
 	golang.org/x/sys v0.0.0-20210823070655-63515b42dcdf // indirect
 )
