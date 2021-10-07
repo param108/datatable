@@ -85,7 +85,8 @@ func (w *DataWindow) EventHandler() {
 			case messages.UpdateValueMsg:
 				// Its edit mode now, extract the value and show it
 				w.G.Update(func(g *gocui.Gui) error {
-					log.Infof("DataWindow: updateValue %s %s %s", msg.Data["X"], msg.Data["Y"])
+					log.Infof("DataWindow: updateValue %s %s %s",
+						msg.Data["value"], msg.Data["X"], msg.Data["Y"])
 					value := msg.Data["value"]
 					X, _ := strconv.Atoi(msg.Data["X"])
 					Y, _ := strconv.Atoi(msg.Data["Y"])

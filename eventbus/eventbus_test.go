@@ -4,12 +4,19 @@ import (
 	"testing"
 	"time"
 
+	"context"
 	"github.com/param108/datatable/messages"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestEventBus(t *testing.T) {
-	eb := NewEventBus()
+	ctx, cancelfn := context.WithCancel(context.Background())
+	eb := NewEventBus(ctx)
+
+	defer func() {
+		cancelfn()
+		eb.Wait()
+	}()
 
 	clt1rd, clt1wr := eb.RegisterWindow()
 
