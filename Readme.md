@@ -14,7 +14,7 @@ Play with csv's on a terminal
 
     ./datatable ui -f <csv filename>
     
-It will read the file `data.csv`  and show it in the ui.
+It will read the file passed and show it in the ui.
 Use your arrow keys to choose different entries in the csv.
 Once you have chosen the entry you are interested in, type `e` to change it.
 
