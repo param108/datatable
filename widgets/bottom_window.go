@@ -3,6 +3,7 @@ package widgets
 import (
 	"context"
 	"strconv"
+	"sync"
 
 	"strings"
 
@@ -24,6 +25,11 @@ type BottomWindow struct {
 	currDataY int
 	mode      string
 	ctx       context.Context
+	wg        sync.WaitGroup
+}
+
+func (w *BottomWindow) Wait() {
+	w.wg.Wait()
 }
 
 func (w *BottomWindow) SetFocus() error {
@@ -36,35 +42,43 @@ func (w *BottomWindow) SetFocus() error {
 }
 
 func (w *BottomWindow) EventHandler() {
-	for msg := range w.rdEvt {
-		switch msg.Key {
-		case messages.SetEditModeMsg:
-			// Its edit mode now, extract the value and show it
-			w.G.Update(func(g *gocui.Gui) error {
-				w.Window.View.Clear()
-				w.Window.View.SetCursor(0, 0)
-				w.Window.View.Write([]byte(msg.Data["value"]))
-				w.currDataX, _ = strconv.Atoi(msg.Data["X"])
-				w.currDataY, _ = strconv.Atoi(msg.Data["Y"])
-				w.Window.View.SetCursor(len(msg.Data["value"]), 0)
-				w.mode = editValueMode
-				g.SetCurrentView(w.Window.Name)
-				g.Cursor = true
-				return nil
-			})
-		case messages.SetSaveAsModeMsg:
-			// Its edit mode now, extract the value and show it
-			w.G.Update(func(g *gocui.Gui) error {
-				w.Window.View.Clear()
-				w.Window.View.SetCursor(0, 0)
-				w.Window.View.Write([]byte(msg.Data["value"]))
-				w.Window.View.SetCursor(len(msg.Data["value"]), 0)
-				w.mode = saveAsMode
-				g.SetCurrentView(w.Window.Name)
-				g.Cursor = true
-				return nil
-			})
+	for {
+		select {
+		case msg := <-w.rdEvt:
+			log.Infof("BottomWindow: Message %s", msg.Key)
+			switch msg.Key {
+			case messages.SetEditModeMsg:
+				// Its edit mode now, extract the value and show it
+				w.G.Update(func(g *gocui.Gui) error {
+					w.Window.View.Clear()
+					w.Window.View.SetCursor(0, 0)
+					log.Infof("New Edit: %s", string(msg.Data["value"]))
+					w.Window.View.Write([]byte(msg.Data["value"]))
+					w.currDataX, _ = strconv.Atoi(msg.Data["X"])
+					w.currDataY, _ = strconv.Atoi(msg.Data["Y"])
+					w.Window.View.SetCursor(len(msg.Data["value"]), 0)
+					w.mode = editValueMode
+					g.SetCurrentView(w.Window.Name)
+					g.Cursor = true
+					return nil
+				})
+			case messages.SetSaveAsModeMsg:
+				// Its edit mode now, extract the value and show it
+				w.G.Update(func(g *gocui.Gui) error {
+					w.Window.View.Clear()
+					w.Window.View.SetCursor(0, 0)
+					w.Window.View.Write([]byte(msg.Data["value"]))
+					w.Window.View.SetCursor(len(msg.Data["value"]), 0)
+					w.mode = saveAsMode
+					g.SetCurrentView(w.Window.Name)
+					g.Cursor = true
+					return nil
+				})
 
+			}
+		case <-w.ctx.Done():
+			log.Infof("Exitting Bottom Window")
+			return
 		}
 	}
 }
@@ -130,7 +144,13 @@ func NewBottomWindow(ctx context.Context, g *gocui.Gui, name string, cltRd, cltW
 	w := &BottomWindow{Window: &Window{Name: name, G: g}, sendEvt: cltWr, rdEvt: cltRd}
 	w.ctx = ctx
 	w.Layout()
-	go w.EventHandler()
+
+	w.wg.Add(1)
+	go func() {
+		defer w.wg.Done()
+		w.EventHandler()
+	}()
+
 	return w
 }
 

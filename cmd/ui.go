@@ -175,16 +175,16 @@ func CreateUI(g *gocui.Gui, filename string) (*UI, error) {
 	}
 
 	cltRd, cltWr := TheUI.EB.RegisterWindow()
-	TheUI.AddWidget(widgets.NewToastWindow(g, "Toast", cltRd, cltWr))
+	TheUI.AddWidget(widgets.NewToastWindow(ctx, g, "Toast", cltRd, cltWr))
 
 	cltRd, cltWr = TheUI.EB.RegisterWindow()
-	TheUI.AddWidget(widgets.NewDataWindow(g, "Data", src, TheUI.KS, cltRd, cltWr))
+	TheUI.AddWidget(widgets.NewDataWindow(ctx, g, "Data", src, TheUI.KS, cltRd, cltWr))
 
 	cltRd, cltWr = TheUI.EB.RegisterWindow()
-	TheUI.AddWidget(widgets.NewBottomWindow(g, "Bottom", cltRd, cltWr))
+	TheUI.AddWidget(widgets.NewBottomWindow(ctx, g, "Bottom", cltRd, cltWr))
 
 	cltRd, cltWr = TheUI.EB.RegisterWindow()
-	TheUI.AddWidget(widgets.NewHelpWindow(g, "Help", cltRd, cltWr))
+	TheUI.AddWidget(widgets.NewHelpWindow(ctx, g, "Help", cltRd, cltWr))
 
 	TheUI.D = src
 
@@ -270,6 +270,12 @@ func (ui *UI) Quit() {
 	logrus.Infof("cancelFunc Called")
 	ui.EB.Wait()
 	logrus.Infof("EB Done")
+
+	// wait for windows to shutdown
+	for _, w := range ui.W {
+		w.Wait()
+	}
+
 	ui.WG.Wait()
 	logrus.Infof("UI Done")
 

@@ -16,6 +16,10 @@ type HelpWindow struct {
 	ctx     context.Context
 }
 
+func (w *HelpWindow) Wait() {
+	// nothing required for help
+}
+
 func (w *HelpWindow) SetFocus() error {
 	w.Window.G.Cursor = false
 	w.Window.G.SetViewOnTop(w.Window.GetView().Name())

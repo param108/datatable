@@ -2,6 +2,7 @@ package widgets
 
 import (
 	"context"
+	"sync"
 	"time"
 
 	"fmt"
@@ -16,6 +17,11 @@ type ToastWindow struct {
 	sendEvt, rdEvt chan *messages.Message
 	Msg            string
 	ctx            context.Context
+	wg             sync.WaitGroup
+}
+
+func (w *ToastWindow) Wait() {
+	w.wg.Wait()
 }
 
 func (w *ToastWindow) SetFocus() error {
@@ -55,18 +61,24 @@ func (w *ToastWindow) CustomSetup() {
 }
 
 func (w *ToastWindow) EventHandler() {
-	for msg := range w.rdEvt {
-		log.Infof("DataWindow: %s", msg.Key)
+	for {
+		select {
+		case msg := <-w.rdEvt:
+			log.Infof("DataWindow: %s", msg.Key)
+			switch msg.Key {
+			case messages.ShowToastMsg:
+				w.Msg = msg.Data["msg"]
+				w.G.Update(func(g *gocui.Gui) error {
+					// show toast for 5 seconds
+					return nil
+				})
+				// Its edit mode now, extract the value and show it
+				log.Infof(fmt.Sprintf("show toast: %s", msg.Data["msg"]))
 
-		switch msg.Key {
-		case messages.ShowToastMsg:
-			w.Msg = msg.Data["msg"]
-			w.G.Update(func(g *gocui.Gui) error {
-				// show toast for 5 seconds
-				return nil
-			})
-			// Its edit mode now, extract the value and show it
-			log.Infof(fmt.Sprintf("show toast: %s", msg.Data["msg"]))
+			}
+		case <-w.ctx.Done():
+			log.Infof("Toast Window event handler shutdown")
+			return
 		}
 	}
 }
@@ -77,7 +89,12 @@ func NewToastWindow(ctx context.Context, g *gocui.Gui, name string, rdEvt, sendE
 	w.sendEvt = sendEvt
 	w.rdEvt = rdEvt
 	w.ctx = ctx
-	go w.EventHandler()
+
+	w.wg.Add(1)
+	go func() {
+		defer w.wg.Done()
+		w.EventHandler()
+	}()
 
 	return w
 }

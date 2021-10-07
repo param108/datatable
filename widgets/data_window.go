@@ -38,6 +38,12 @@ type DataWindow struct {
 	ks      *keybindings.KeyStore
 	sendEvt chan *messages.Message
 	rdEvt   chan *messages.Message
+	ctx     context.Context
+	wg      sync.WaitGroup
+}
+
+func (w *DataWindow) Wait() {
+	w.wg.Wait()
 }
 
 func (w *DataWindow) SetFocus() error {
@@ -60,56 +66,66 @@ func NewDataWindow(ctx context.Context, g *gocui.Gui, name string, d data.DataSo
 	w.sendEvt = sendEvt
 	w.rdEvt = rdEvt
 
-	go w.EventHandler()
+	w.wg.Add(1)
+	go func() {
+		defer w.wg.Done()
+		w.EventHandler()
+	}()
 
 	return w
 }
 
 func (w *DataWindow) EventHandler() {
-	for msg := range w.rdEvt {
-		log.Infof("DataWindow: %s", msg.Key)
+	for {
+		select {
+		case msg := <-w.rdEvt:
+			log.Infof("DataWindow: %s", msg.Key)
 
-		switch msg.Key {
-		case messages.UpdateValueMsg:
-			// Its edit mode now, extract the value and show it
-			w.G.Update(func(g *gocui.Gui) error {
-				log.Infof("DataWindow: updateValue %s %s %s", msg.Data["X"], msg.Data["Y"])
-				value := msg.Data["value"]
-				X, _ := strconv.Atoi(msg.Data["X"])
-				Y, _ := strconv.Atoi(msg.Data["Y"])
-				err := w.d.Set(Y, X, value)
-				if err != nil {
-					log.Errorf("DataWindow: failed set %v", err)
+			switch msg.Key {
+			case messages.UpdateValueMsg:
+				// Its edit mode now, extract the value and show it
+				w.G.Update(func(g *gocui.Gui) error {
+					log.Infof("DataWindow: updateValue %s %s %s", msg.Data["X"], msg.Data["Y"])
+					value := msg.Data["value"]
+					X, _ := strconv.Atoi(msg.Data["X"])
+					Y, _ := strconv.Atoi(msg.Data["Y"])
+					err := w.d.Set(Y, X, value)
+					if err != nil {
+						log.Errorf("DataWindow: failed set %v", err)
+					}
+					g.Cursor = false
+					g.SetCurrentView(w.Window.Name)
+					return nil
+				})
+			case messages.SaveAsMsg:
+				if err := w.d.SaveAs(msg.Data["value"]); err != nil {
+					// FIXME: Add a toast to notify the user
+					log.Errorf("data_window: Failed to save as %v", err)
+					msg := &messages.Message{
+						Key: messages.ShowToastMsg,
+						Data: map[string]string{
+							"msg": fmt.Sprintf("Failed to save: %v", err),
+						},
+					}
+					w.sendEvt <- msg
+				} else {
+					msg := &messages.Message{
+						Key: messages.ShowToastMsg,
+						Data: map[string]string{
+							"msg": "Save Successful",
+						},
+					}
+					w.sendEvt <- msg
 				}
-				g.Cursor = false
-				g.SetCurrentView(w.Window.Name)
-				return nil
-			})
-		case messages.SaveAsMsg:
-			if err := w.d.SaveAs(msg.Data["value"]); err != nil {
-				// FIXME: Add a toast to notify the user
-				log.Errorf("data_window: Failed to save as %v", err)
-				msg := &messages.Message{
-					Key: messages.ShowToastMsg,
-					Data: map[string]string{
-						"msg": fmt.Sprintf("Failed to save: %v", err),
-					},
-				}
-				w.sendEvt <- msg
-			} else {
-				msg := &messages.Message{
-					Key: messages.ShowToastMsg,
-					Data: map[string]string{
-						"msg": "Save Successful",
-					},
-				}
-				w.sendEvt <- msg
+				w.G.Update(func(g *gocui.Gui) error {
+					g.Cursor = false
+					g.SetCurrentView(w.Window.Name)
+					return nil
+				})
 			}
-			w.G.Update(func(g *gocui.Gui) error {
-				g.Cursor = false
-				g.SetCurrentView(w.Window.Name)
-				return nil
-			})
+		case <-w.ctx.Done():
+			log.Info("Exit Data Window Event Handler")
+			return
 		}
 	}
 }

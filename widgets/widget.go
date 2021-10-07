@@ -13,4 +13,6 @@ type Widget interface {
 	CustomSetup()
 	SetKeys() error
 	SetFocus() error
+	// Cancel the context and call wait for shutdown
+	Wait()
 }
