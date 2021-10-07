@@ -9,6 +9,10 @@ Play with csv's on a terminal
 # Setup
     
     make datatable
+
+# Test
+    
+    make test
     
 # Run UI
 
