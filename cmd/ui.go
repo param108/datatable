@@ -225,6 +225,8 @@ func CreateUI(g *gocui.Gui, filename string) (*UI, error) {
 		TheUI.animate(g)
 	}()
 
+	g.InputEsc = true
+
 	return TheUI, nil
 }
 

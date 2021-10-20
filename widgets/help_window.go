@@ -89,6 +89,7 @@ func (w *HelpWindow) CustomSetup() {
     The value of the cell will be seen in the bottom window.
     Use the alphanumeric keys to edit. [invert]Backspace[reset] to delete.
     Press [invert]Enter[reset] to finish editting.
+          [invert]Esc[reset] to cancel edit.
 
     After editting, press [invert]s[reset] to save.
 

@@ -36,7 +36,6 @@ func (w *BottomWindow) Wait() {
 
 func (w *BottomWindow) SetFocus() error {
 	w.Window.G.Cursor = true
-	w.G.InputEsc = true
 	if _, err := w.Window.G.SetCurrentView(w.Window.GetView().Name()); err != nil {
 		log.Errorf("bottomWindow: Failed to set view %v", err)
 		return err
@@ -101,6 +100,7 @@ func (w *BottomWindow) Edit(v *gocui.View, key gocui.Key, ch rune, mod gocui.Mod
 		if x >= 0 {
 			v.SetCursor(x, y)
 		}
+		return
 	}
 
 	if key == gocui.KeyArrowRight {
@@ -109,6 +109,17 @@ func (w *BottomWindow) Edit(v *gocui.View, key gocui.Key, ch rune, mod gocui.Mod
 		if x < len(v.ViewBuffer()) {
 			v.SetCursor(x, y)
 		}
+		return
+	}
+
+	if key == gocui.KeyEsc {
+		msg := &messages.Message{
+			Key: messages.SetExploreModeMsg,
+		}
+		w.sendEvt <- msg
+		w.Window.View.Clear()
+		w.Window.View.SetCursor(0, 0)
+		return
 	}
 
 	if key == gocui.KeyEnter {
@@ -195,22 +206,16 @@ func (w *BottomWindow) Animate(g *gocui.Gui) error {
 func (w *BottomWindow) CreateEscKeyHandler() func(*gocui.Gui, *gocui.View) error {
 	return func(g *gocui.Gui, v *gocui.View) error {
 		log.Infof("Bottom: Esc Key pressed")
-		msg := &messages.Message{
-			Key: messages.SetExploreModeMsg,
-		}
-		w.sendEvt <- msg
-		w.Window.View.Clear()
-		w.Window.View.SetCursor(0, 0)
 		return nil
 	}
 }
 
 func (w *BottomWindow) SetKeys() error {
-	err := w.ks.AddKey(w.Window.Name, gocui.KeyEsc, gocui.ModNone, w.CreateEscKeyHandler())
+	/*err := w.ks.AddKey(w.Window.Name, gocui.KeyEsc, gocui.ModNone, w.CreateEscKeyHandler())
 	if err != nil {
 		log.Errorf("Failed to add key handler %+v", err)
 		return err
-	}
+	}*/
 
 	return nil
 }
