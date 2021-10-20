@@ -203,19 +203,6 @@ func (w *BottomWindow) Animate(g *gocui.Gui) error {
 	return nil
 }
 
-func (w *BottomWindow) CreateEscKeyHandler() func(*gocui.Gui, *gocui.View) error {
-	return func(g *gocui.Gui, v *gocui.View) error {
-		log.Infof("Bottom: Esc Key pressed")
-		return nil
-	}
-}
-
 func (w *BottomWindow) SetKeys() error {
-	/*err := w.ks.AddKey(w.Window.Name, gocui.KeyEsc, gocui.ModNone, w.CreateEscKeyHandler())
-	if err != nil {
-		log.Errorf("Failed to add key handler %+v", err)
-		return err
-	}*/
-
 	return nil
 }
