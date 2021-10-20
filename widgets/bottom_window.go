@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/jroimartin/gocui"
+	"github.com/param108/datatable/keybindings"
 	"github.com/param108/datatable/messages"
 	log "github.com/sirupsen/logrus"
 )
@@ -26,6 +27,7 @@ type BottomWindow struct {
 	mode      string
 	ctx       context.Context
 	wg        sync.WaitGroup
+	ks        *keybindings.KeyStore
 }
 
 func (w *BottomWindow) Wait() {
@@ -34,6 +36,7 @@ func (w *BottomWindow) Wait() {
 
 func (w *BottomWindow) SetFocus() error {
 	w.Window.G.Cursor = true
+	w.G.InputEsc = true
 	if _, err := w.Window.G.SetCurrentView(w.Window.GetView().Name()); err != nil {
 		log.Errorf("bottomWindow: Failed to set view %v", err)
 		return err
@@ -92,6 +95,22 @@ func (w *BottomWindow) Edit(v *gocui.View, key gocui.Key, ch rune, mod gocui.Mod
 		return
 	}
 
+	if key == gocui.KeyArrowLeft {
+		x, y := v.Cursor()
+		x = x - 1
+		if x >= 0 {
+			v.SetCursor(x, y)
+		}
+	}
+
+	if key == gocui.KeyArrowRight {
+		x, y := v.Cursor()
+		x = x + 1
+		if x < len(v.ViewBuffer()) {
+			v.SetCursor(x, y)
+		}
+	}
+
 	if key == gocui.KeyEnter {
 		log.Infof("keyEnter %s", strings.TrimSpace(v.Buffer()))
 		var msg *messages.Message
@@ -118,8 +137,8 @@ func (w *BottomWindow) Edit(v *gocui.View, key gocui.Key, ch rune, mod gocui.Mod
 			return
 		}
 		w.sendEvt <- msg
-		w.Window.View.Clear()
-		w.Window.View.SetCursor(0, 0)
+		w.View.Clear()
+		w.View.SetCursor(0, 0)
 		return
 	}
 	if ch == 0 {
@@ -140,8 +159,8 @@ func (w *BottomWindow) CustomSetup() {
 	//w.View.SetCursor(0, 0)
 }
 
-func NewBottomWindow(ctx context.Context, g *gocui.Gui, name string, cltRd, cltWr chan *messages.Message) *BottomWindow {
-	w := &BottomWindow{Window: &Window{Name: name, G: g}, sendEvt: cltWr, rdEvt: cltRd}
+func NewBottomWindow(ctx context.Context, g *gocui.Gui, name string, ks *keybindings.KeyStore, cltRd, cltWr chan *messages.Message) *BottomWindow {
+	w := &BottomWindow{Window: &Window{Name: name, G: g}, sendEvt: cltWr, rdEvt: cltRd, ks: ks}
 	w.ctx = ctx
 	w.Layout()
 
@@ -173,6 +192,25 @@ func (w *BottomWindow) Animate(g *gocui.Gui) error {
 	return nil
 }
 
+func (w *BottomWindow) CreateEscKeyHandler() func(*gocui.Gui, *gocui.View) error {
+	return func(g *gocui.Gui, v *gocui.View) error {
+		log.Infof("Bottom: Esc Key pressed")
+		msg := &messages.Message{
+			Key: messages.SetExploreModeMsg,
+		}
+		w.sendEvt <- msg
+		w.Window.View.Clear()
+		w.Window.View.SetCursor(0, 0)
+		return nil
+	}
+}
+
 func (w *BottomWindow) SetKeys() error {
+	err := w.ks.AddKey(w.Window.Name, gocui.KeyEsc, gocui.ModNone, w.CreateEscKeyHandler())
+	if err != nil {
+		log.Errorf("Failed to add key handler %+v", err)
+		return err
+	}
+
 	return nil
 }

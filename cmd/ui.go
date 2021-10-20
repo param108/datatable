@@ -67,6 +67,16 @@ func (ui *UI) CentralCommand(CNCrd, CNCwr chan *messages.Message) {
 					ui.CV = ui.W["Bottom"].GetView()
 					return nil
 				})
+			case messages.SetExploreModeMsg:
+				ui.G.Update(func(g *gocui.Gui) error {
+					err := ui.W["Data"].SetFocus()
+					if err != nil {
+						logrus.Errorf("CNC: Failed to set view: Bottom")
+						return err
+					}
+					ui.CV = ui.W["Data"].GetView()
+					return nil
+				})
 			case messages.UpdateValueMsg:
 				ui.G.Update(func(g *gocui.Gui) error {
 					err := ui.W["Data"].SetFocus()
@@ -181,7 +191,7 @@ func CreateUI(g *gocui.Gui, filename string) (*UI, error) {
 	TheUI.AddWidget(widgets.NewDataWindow(ctx, g, "Data", src, TheUI.KS, cltRd, cltWr))
 
 	cltRd, cltWr = TheUI.EB.RegisterWindow()
-	TheUI.AddWidget(widgets.NewBottomWindow(ctx, g, "Bottom", cltRd, cltWr))
+	TheUI.AddWidget(widgets.NewBottomWindow(ctx, g, "Bottom", TheUI.KS, cltRd, cltWr))
 
 	cltRd, cltWr = TheUI.EB.RegisterWindow()
 	TheUI.AddWidget(widgets.NewHelpWindow(ctx, g, "Help", cltRd, cltWr))
