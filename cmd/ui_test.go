@@ -1,11 +1,12 @@
 package cmd
 
 import (
-	"testing"
-	"time"
-
 	"github.com/jroimartin/gocui"
 	"github.com/stretchr/testify/assert"
+	"log"
+	"os"
+	"testing"
+	"time"
 )
 
 func testUIRun(g *gocui.Gui, done chan bool) {
@@ -14,6 +15,13 @@ func testUIRun(g *gocui.Gui, done chan bool) {
 		return
 	}
 	done <- true
+}
+
+func TestMain(m *testing.M) {
+	code := m.Run()
+	defer testLogClose()
+	log.Printf("LogFile: %s\n", logfile.Name())
+	os.Exit(code)
 }
 
 func TestStartUpHappens(t *testing.T) {
@@ -28,12 +36,26 @@ func TestStartUpHappens(t *testing.T) {
 
 	time.Sleep(2 * time.Second)
 
-	t.Run("gui has 4 windows", func(t *testing.T) {
+	t.Run("gui has correct initial windows", func(t *testing.T) {
 		assert.Equal(t, 4, len(g.Views()), "incorrect number of windows")
 		assert.Equal(t, "Help", g.CurrentView().Name(), "incorrect current view")
 		for i, v := range g.Views() {
 			if v.Name() == "Help" {
 				assert.Equal(t, 3, i, "help window not on top")
+			}
+		}
+	})
+
+	t.Run("When 'q' is pressed help window vanishes", func(t *testing.T) {
+		g.CurrentView().Editor.Edit(g.CurrentView(), 0, 'q', 0)
+		time.Sleep(5 * time.Second)
+		for i, v := range g.Views() {
+			if v.Name() == "Help" {
+				assert.Equal(t, 0, i, "help window not on bottom after q")
+			}
+
+			if v.Name() == "Data" {
+				assert.Equal(t, 3, i, "data window not on top after q")
 			}
 		}
 	})

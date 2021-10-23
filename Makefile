@@ -9,5 +9,5 @@ datatable: $(GO_FILES)
 test: export OUTPUT = $(shell tempfile)
 test:
 	@echo "####Output File: $${OUTPUT}"
-	go test ./... > $${OUTPUT}
+	go test -v ./... > $${OUTPUT}
 	cat $${OUTPUT}

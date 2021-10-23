@@ -49,9 +49,15 @@ func (w *DataWindow) Wait() {
 func (w *DataWindow) SetFocus() error {
 	w.Window.G.Cursor = false
 	if _, err := w.Window.G.SetCurrentView(w.Window.GetView().Name()); err != nil {
-		log.Errorf("bottomWindow: Failed to set view %v", err)
+		log.Errorf("helpWindow: Failed to set view %v", err)
 		return err
 	}
+
+	if _, err := w.Window.G.SetViewOnTop(w.Window.GetView().Name()); err != nil {
+		log.Errorf("dataWindow: Failed to set view on top %v", err)
+		return err
+	}
+
 	return nil
 }
 

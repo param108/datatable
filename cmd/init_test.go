@@ -1,9 +1,12 @@
 package cmd
 
 import (
-	log "github.com/sirupsen/logrus"
+	"fmt"
+	"io/ioutil"
 	"os"
 	"time"
+
+	log "github.com/sirupsen/logrus"
 )
 
 var (
@@ -13,20 +16,20 @@ var (
 func init() {
 	if logfile == nil {
 		var err error
-		logfile, err = os.OpenFile("debug.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+		logfile, err = ioutil.TempFile("", "example")
 		if err != nil {
 			panic("Failed to open log file:" + err.Error())
 		}
-
+		fmt.Println(logfile.Name())
 	}
 	log.SetOutput(logfile)
 	log.SetLevel(log.InfoLevel)
-	log.Infof("Begun %v", time.Now())
+	log.Infof("Begun %v %s", time.Now(), logfile.Name())
 	log.SetReportCaller(true)
 	log.SetFormatter(&log.JSONFormatter{})
 
 }
 
-func Close() {
+func testLogClose() {
 	logfile.Close()
 }
