@@ -6,5 +6,8 @@ $(info GO_FILES = ${GO_FILES})
 datatable: $(GO_FILES)
 	go build
 
-test: 
-	go test ./...
+test: export OUTPUT = $(shell tempfile)
+test:
+	@echo "####Output File: ${OUTPUT}"
+	go test ./... > $${OUTPUT}
+	cat $${OUTPUT}
