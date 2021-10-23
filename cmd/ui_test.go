@@ -28,6 +28,16 @@ func TestStartUpHappens(t *testing.T) {
 
 	time.Sleep(2 * time.Second)
 
+	t.Run("gui has 4 windows", func(t *testing.T) {
+		assert.Equal(t, 4, len(g.Views()), "incorrect number of windows")
+		assert.Equal(t, "Help", g.CurrentView().Name(), "incorrect current view")
+		for i, v := range g.Views() {
+			if v.Name() == "Help" {
+				assert.Equal(t, 3, i, "help window not on top")
+			}
+		}
+	})
+
 	g.Update(func(g *gocui.Gui) error {
 		return gocui.ErrQuit
 	})

@@ -8,6 +8,6 @@ datatable: $(GO_FILES)
 
 test: export OUTPUT = $(shell tempfile)
 test:
-	@echo "####Output File: ${OUTPUT}"
-	go test ./... > ${OUTPUT}
-	cat ${OUTPUT}
+	@echo "####Output File: $${OUTPUT}"
+	go test ./... > $${OUTPUT}
+	cat $${OUTPUT}
