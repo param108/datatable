@@ -35,6 +35,7 @@ to edit the value.
 You can use the arrow keys while editting the value. Esc to cancel edit.
 
 ## Save or Save As
+
 Finally, after making all the changes you want, type `s` to save the changes back to the csv.
 
 Type `w` to save as.
@@ -43,6 +44,10 @@ Type `w` to save as.
 
 From the Data Window (topmost window on UI) type `a`. Focus will change to the bottom window. Edit the name of the column and press enter. New Column should be available in the Data UI. Don't forget to save as usual to persist!
 
+## View Help
+
 press `ctrl-h` at any time  to show help.
+
+## Exit
 
 press `ctrl-c` to exit
