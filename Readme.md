@@ -19,6 +19,11 @@ Play with csv's on a terminal
     ./datatable ui -f <csv filename>
     
 It will read the file passed and show it in the ui.
+
+# Features
+
+## Edit CSV entries
+
 Use your arrow keys to choose different entries in the csv.
 Once you have chosen the entry you are interested in, type `e` to change it.
 
@@ -29,6 +34,7 @@ to edit the value.
 
 You can use the arrow keys while editting the value. Esc to cancel edit.
 
+## Save or Save As
 Finally, after making all the changes you want, type `s` to save the changes back to the csv.
 
 Type `w` to save as.
