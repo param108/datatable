@@ -33,6 +33,10 @@ Finally, after making all the changes you want, type `s` to save the changes bac
 
 Type `w` to save as.
 
-press `ctrl-h` at any time  to show the above help.
+## Add a column
+
+From the Data Window (topmost window on UI) type `a`. Focus will change to the bottom window. Edit the name of the column and press enter. New Column should be available in the Data UI. Don't forget to save as usual to persist!
+
+press `ctrl-h` at any time  to show help.
 
 press `ctrl-c` to exit

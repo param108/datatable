@@ -96,6 +96,8 @@ func (w *HelpWindow) CustomSetup() {
     press [invert]w[reset] to save as.
        filename will appear in the bottom window for editting. Enter to save.
 
+    press [invert]a[reset] to add a column.
+
     Press [invert]q[reset] to close this.
     Press [invert]ctrl-h[reset] to see this again.
 `)))
