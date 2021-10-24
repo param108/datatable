@@ -22,13 +22,6 @@ type CSV struct {
 	mx             sync.RWMutex
 }
 
-type Metadata struct {
-	Value   string
-	FgColor string
-	BgColor string
-	Attr    string
-}
-
 func NewCSV(filename string) (DataSource, error) {
 	c := &CSV{Filename: filename}
 	ctx := context.Background()
@@ -259,4 +252,39 @@ func (c *CSV) ClearChanged() {
 
 func (c *CSV) Source() string {
 	return c.Filename
+}
+
+func (c *CSV) AddColumn(colName string) error {
+	if len(colName) == 0 {
+		return errors.New("invalid name")
+	}
+
+	c.mx.Lock()
+	defer c.mx.Unlock()
+
+	for i := range c.data {
+		if i == 0 {
+			c.data[i] = append(c.data[i], colName)
+			c.Data[i] = append(c.Data[i], &Metadata{
+				Value:   colName,
+				BgColor: "[_light_gray_]",
+				FgColor: "[black]",
+				Attr:    "[underline]",
+			})
+
+			cm := &ColumnMetadata{}
+			cm.Name = colName
+			cm.Type = ColumnTypeString
+			c.columnMetadata = append(c.columnMetadata, cm)
+
+			continue
+		}
+		c.data[i] = append(c.data[i], "")
+		c.Data[i] = append(c.Data[i], &Metadata{
+			Value: "",
+		})
+	}
+
+	c.changed = true
+	return nil
 }

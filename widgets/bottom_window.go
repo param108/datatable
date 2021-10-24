@@ -16,6 +16,7 @@ import (
 const (
 	editValueMode = "edit_value"
 	saveAsMode    = "save_as"
+	addColumnMode = "add_column"
 )
 
 type BottomWindow struct {
@@ -76,7 +77,16 @@ func (w *BottomWindow) EventHandler() {
 					g.Cursor = true
 					return nil
 				})
-
+			case messages.SetAddColumnModeMsg:
+				w.G.Update(func(g *gocui.Gui) error {
+					w.Window.View.Clear()
+					w.Window.View.SetCursor(0, 0)
+					w.Window.View.Write([]byte("new_column"))
+					w.mode = addColumnMode
+					g.SetCurrentView(w.Window.Name)
+					g.Cursor = true
+					return nil
+				})
 			}
 		case <-w.ctx.Done():
 			log.Infof("Exitting Bottom Window")
@@ -139,6 +149,13 @@ func (w *BottomWindow) Edit(v *gocui.View, key gocui.Key, ch rune, mod gocui.Mod
 		case saveAsMode:
 			msg = &messages.Message{
 				Key: messages.SaveAsMsg,
+				Data: map[string]string{
+					"value": strings.TrimSpace(v.Buffer()),
+				},
+			}
+		case addColumnMode:
+			msg = &messages.Message{
+				Key: messages.AddColumnMsg,
 				Data: map[string]string{
 					"value": strings.TrimSpace(v.Buffer()),
 				},

@@ -60,6 +60,12 @@ func TestStartUpHappens(t *testing.T) {
 		}
 	})
 
+	//Bottom window gets focus with the words new_column
+	t.Run("When 'a' is pressed", func(t *testing.T) {
+		g.CurrentView().Editor.Edit(g.CurrentView(), 0, 'q', 0)
+		testAddColumn(t, ui)
+	})
+
 	g.Update(func(g *gocui.Gui) error {
 		return gocui.ErrQuit
 	})

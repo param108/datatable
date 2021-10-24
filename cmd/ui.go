@@ -97,6 +97,27 @@ func (ui *UI) CentralCommand(CNCrd, CNCwr chan *messages.Message) {
 					ui.CV = ui.W["Bottom"].GetView()
 					return nil
 				})
+			case messages.AddColumnMsg:
+				ui.G.Update(func(g *gocui.Gui) error {
+					err := ui.W["Data"].SetFocus()
+					if err != nil {
+						logrus.Errorf("CNC: Failed to set view: Bottom")
+						return err
+					}
+					ui.CV = ui.W["Data"].GetView()
+					return nil
+				})
+
+			case messages.SetAddColumnModeMsg:
+				ui.G.Update(func(g *gocui.Gui) error {
+					err := ui.W["Bottom"].SetFocus()
+					if err != nil {
+						logrus.Errorf("CNC: Failed to set view: Bottom")
+						return err
+					}
+					ui.CV = ui.W["Bottom"].GetView()
+					return nil
+				})
 			case messages.SaveAsMsg:
 				ui.G.Update(func(g *gocui.Gui) error {
 					err := ui.W["Data"].SetFocus()

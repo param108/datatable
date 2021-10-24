@@ -22,6 +22,13 @@ type ColumnMetadata struct {
 	Type ColumnType
 }
 
+type Metadata struct {
+	Value   string
+	FgColor string
+	BgColor string
+	Attr    string
+}
+
 type DataSource interface {
 	Create(ctx context.Context) error
 	Get(row, col int) (interface{}, error)
@@ -37,4 +44,5 @@ type DataSource interface {
 	Save() error
 	Source() string
 	SaveAs(source string) error
+	AddColumn(colName string) error
 }

@@ -46,6 +46,9 @@ func (w *DataWindow) Wait() {
 	w.wg.Wait()
 }
 
+func (w *DataWindow) GetData() data.DataSource {
+	return w.d
+}
 func (w *DataWindow) SetFocus() error {
 	w.Window.G.Cursor = false
 	if _, err := w.Window.G.SetCurrentView(w.Window.GetView().Name()); err != nil {
@@ -129,6 +132,33 @@ func (w *DataWindow) EventHandler() {
 					g.SetCurrentView(w.Window.Name)
 					return nil
 				})
+			case messages.AddColumnMsg:
+				if err := w.d.AddColumn(msg.Data["value"]); err != nil {
+					// FIXME: Add a toast to notify the user
+					log.Errorf("data_window: Failed to add column %v", err)
+					msg := &messages.Message{
+						Key: messages.ShowToastMsg,
+						Data: map[string]string{
+							"msg": fmt.Sprintf("Failed to add column: %v", err),
+						},
+					}
+					w.sendEvt <- msg
+				} else {
+					msg := &messages.Message{
+						Key: messages.ShowToastMsg,
+						Data: map[string]string{
+							"msg": "add column Successful",
+						},
+					}
+					w.sendEvt <- msg
+				}
+
+				w.G.Update(func(g *gocui.Gui) error {
+					g.Cursor = false
+					g.SetCurrentView(w.Window.Name)
+					return nil
+				})
+
 			}
 		case <-w.ctx.Done():
 			log.Info("Exit Data Window Event Handler")
@@ -185,7 +215,11 @@ func (w *DataWindow) Edit(v *gocui.View, key gocui.Key, ch rune, mod gocui.Modif
 			},
 		}
 		w.sendEvt <- msg
-
+	case 'a':
+		msg := &messages.Message{
+			Key: messages.SetAddColumnModeMsg,
+		}
+		w.sendEvt <- msg
 	}
 	return
 }

@@ -21,4 +21,7 @@ const (
 
 	ShowToastMsg = MessageName("showToast")
 	HideToastMsg = MessageName("hideToast")
+
+	SetAddColumnModeMsg = MessageName("setAddColumnMode")
+	AddColumnMsg        = MessageName("addColumn")
 )
